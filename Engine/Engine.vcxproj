@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\EngineRuntime.cpp" />
     <ClCompile Include="Source\Engine\EngineState.cpp" />
     <ClCompile Include="Source\Platform\Window\GlfwWindow.cpp" />
     <ClCompile Include="Source\Platform\Input\GlfwInput.cpp" />
@@ -40,6 +41,7 @@
     <ClCompile Include="Source\Scene\Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Engine\EngineRuntime.h" />
     <ClInclude Include="Source\Engine\EngineState.h" />
     <ClInclude Include="Source\Math\MathMatrix.h" />
     <ClInclude Include="Source\Math\MathTypes.h" />
@@ -79,13 +81,13 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>

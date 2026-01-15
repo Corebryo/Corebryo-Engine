@@ -4,6 +4,9 @@
     <ClCompile Include="Source\Engine\EngineState.cpp">
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\EngineRuntime.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Scene\EngineCamera.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
@@ -64,6 +67,9 @@
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\EngineState.h">
+      <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\EngineRuntime.h">
       <Filter>Source Files\Engine</Filter>
     </ClInclude>
     <ClInclude Include="Source\Renderer\Vulkan\Core\VulkanBuffer.h">
