@@ -110,7 +110,7 @@ static bool IsPointInsideAABB(const Vec3& point, const AABB& bounds)
 
 int main()
 {
-    /* Basic engine configuration for the bootstrap app. */
+    /* Basic editor configuration for the bootstrap app. */
     constexpr std::uint32_t DefaultWindowWidth = 1280;
     constexpr std::uint32_t DefaultWindowHeight = 720;
     constexpr bool EnableCube = true;
@@ -121,7 +121,7 @@ int main()
     constexpr float MinDeltaTime = 0.0f;
     constexpr float MaxDeltaTime = 0.05f;
 
-    std::printf("Starting engine initialization...\n");
+    std::printf("Starting editor initialization...\n");
 
     SetHighPerformancePowerMode();
 
@@ -129,7 +129,7 @@ int main()
     GlfwWindow window;
     bool windowCreated = false;
 
-    if (!window.Create(DefaultWindowWidth, DefaultWindowHeight, "Engine"))
+    if (!window.Create(DefaultWindowWidth, DefaultWindowHeight, "Editor"))
     {
         std::fprintf(stderr, "Failed to create window\n");
         return 1;
@@ -158,7 +158,7 @@ int main()
     VulkanInstance instance;
     bool instanceCreated = false;
 
-    if (!instance.Create("Engine", window.GetHandle()))
+    if (!instance.Create("Editor", window.GetHandle()))
     {
         std::fprintf(stderr, "Failed to create Vulkan instance\n");
 
