@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Source\Engine\EngineState.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\EngineCamera.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Core\VulkanBuffer.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Core\VulkanDevice.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Core\VulkanInstance.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Pipeline\VulkanPipeline.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Render\VulkanRenderer.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Render\VulkanRenderPass.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Swapchain\VulkanSurface.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Swapchain</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Swapchain\VulkanSwapchain.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Swapchain</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Platform\Windows\Win32WindowUtils.cpp">
+      <Filter>Source Files\Platform\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Platform\Windows\Win32PowerPerformance.cpp">
+      <Filter>Source Files\Platform\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Platform\Window\GlfwWindow.cpp">
+      <Filter>Source Files\Platform\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Platform\Input\GlfwInput.cpp">
+      <Filter>Source Files\Platform\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Input\InputState.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Render\ObjLoader.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Render\WicTextureLoader.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Scene.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Render\VulkanFramebuffers.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Scene\EngineCamera.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\EngineState.h">
+      <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Core\VulkanBuffer.h">
+      <Filter>Source Files\Renderer\Vulkan\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Core\VulkanDevice.h">
+      <Filter>Source Files\Renderer\Vulkan\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Core\VulkanInstance.h">
+      <Filter>Source Files\Renderer\Vulkan\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Pipeline\VulkanPipeline.h">
+      <Filter>Source Files\Renderer\Vulkan\Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Render\VulkanRenderer.h">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Render\VulkanRenderPass.h">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Swapchain\VulkanSurface.h">
+      <Filter>Source Files\Renderer\Vulkan\Swapchain</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Swapchain\VulkanSwapchain.h">
+      <Filter>Source Files\Renderer\Vulkan\Swapchain</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Platform\PlatformIncludes.h">
+      <Filter>Source Files\Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Platform\Windows\Win32WindowUtils.h">
+      <Filter>Source Files\Platform\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Platform\Window\GlfwWindow.h">
+      <Filter>Source Files\Platform\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Platform\Input\GlfwInput.h">
+      <Filter>Source Files\Platform\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\MathMatrix.h">
+      <Filter>Source Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\MathTypes.h">
+      <Filter>Source Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\MathVector.h">
+      <Filter>Source Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Input\InputState.h">
+      <Filter>Source Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Render\Mesh.h">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Render\ObjLoader.h">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Render\WicTextureLoader.h">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\RenderItem.h">
+      <Filter>Source Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Components\MaterialComponent.h">
+      <Filter>Source Files\Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Components\MeshComponent.h">
+      <Filter>Source Files\Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Components\TransformComponent.h">
+      <Filter>Source Files\Scene\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Entity.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Scene.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Collision\AABB.h">
+      <Filter>Source Files\Scene\Collisions</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Render\VulkanFramebuffers.h">
+      <Filter>Source Files\Renderer\Vulkan\Render</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{61a7ae53-f214-4ede-98e4-6bbb8d6a3120}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Scene">
+      <UniqueIdentifier>{ba604a16-d0cb-47dc-9a72-e13de589b436}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine">
+      <UniqueIdentifier>{f0c4db9b-5662-4f35-9f3b-4c02f2c29f2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer">
+      <UniqueIdentifier>{28eb26e1-53a2-4470-85c5-7dd80843a1dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer\Vulkan">
+      <UniqueIdentifier>{db95153f-1ba1-4948-80fd-28031515b0cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer\Vulkan\Core">
+      <UniqueIdentifier>{e93723d5-241f-4331-8b46-4bd45dec1122}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer\Vulkan\Pipeline">
+      <UniqueIdentifier>{3b0c647b-d1bc-4bd7-b6c3-1c67ec9df77d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer\Vulkan\Render">
+      <UniqueIdentifier>{dfed67c0-2849-420d-8dc3-7fea4b57c841}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer\Vulkan\Swapchain">
+      <UniqueIdentifier>{fabed223-44c3-42ba-8dc6-d2398acd24cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform">
+      <UniqueIdentifier>{0ef18f11-a99f-49f1-9c44-38a976ccbb42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\Windows">
+      <UniqueIdentifier>{379c85be-e25f-4f7f-a03d-c438195411f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\Window">
+      <UniqueIdentifier>{f2d819a1-7291-427c-8187-cd3005e352de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\Input">
+      <UniqueIdentifier>{e8b60bee-e3c3-44e8-86f1-76cb6ed4faf8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Math">
+      <UniqueIdentifier>{68ecb424-9097-419e-be81-eb85058232a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Input">
+      <UniqueIdentifier>{7115d8f4-9509-4710-9d3b-74dbb0ae1f04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Scene\Components">
+      <UniqueIdentifier>{d6b7a1fa-4f1d-4f8d-92ce-49f11c4a33c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Scene\Collisions">
+      <UniqueIdentifier>{9b1e000d-ca4d-4d73-8be3-e356cf73e0c0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

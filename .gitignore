@@ -1,0 +1,28 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.opensdf
+*.sdf
+ipch/
+
+# Build output
+Binary/
+Temp/
+x64/
+Debug/
+Release/
+
+# Intermediate
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+
+# Editor runtime
+glfw3.dll
+
+# Null files
+nul
+**/nul
