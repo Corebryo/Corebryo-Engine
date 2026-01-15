@@ -26,3 +26,6 @@ glfw3.dll
 # Null files
 nul
 **/nul
+
+# Agents file
+AGENTS.md
