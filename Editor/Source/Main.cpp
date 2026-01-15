@@ -41,9 +41,31 @@
 
 #include <cstdio>
 #include <cstdint>
+#include <filesystem>
 #include <vector>
+#include <Windows.h>
 
 void SetHighPerformancePowerMode();
+
+static void SetWorkingDirectoryToEngineRoot()
+{
+    char modulePath[MAX_PATH]{};
+    const DWORD length = GetModuleFileNameA(nullptr, modulePath, MAX_PATH);
+
+    if (length == 0 || length == MAX_PATH)
+    {
+        return;
+    }
+
+    std::filesystem::path exePath(modulePath);
+    std::filesystem::path solutionDir = exePath.parent_path().parent_path();
+    std::filesystem::path engineDir = solutionDir / "Engine";
+
+    if (std::filesystem::exists(engineDir))
+    {
+        SetCurrentDirectoryA(engineDir.string().c_str());
+    }
+}
 
 /* Simple scope-exit helper for reliable cleanup paths. */
 template <typename TFunc>
@@ -124,6 +146,7 @@ int main()
     std::printf("Starting editor initialization...\n");
 
     SetHighPerformancePowerMode();
+    SetWorkingDirectoryToEngineRoot();
 
     /* Create the native window first because Vulkan needs a surface provider. */
     GlfwWindow window;
