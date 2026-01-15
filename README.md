@@ -42,16 +42,24 @@ Expect breaking changes.
 
 ## Build (Visual Studio)
 
-This repository does not include a `.sln` file.
+This repository uses a Visual Studio Solution Extension file (`.slnx`).
 
-You can build it in Visual Studio by creating a solution locally:
+### Requirements
+- Visual Studio 2022 (or newer)
+- Desktop development with C++
+- Vulkan SDK installed
+- GLFW (prebuilt or source, linked locally)
 
-1. Open Visual Studio
-2. Create a new **Empty Project** or **Console App (C++)**
-3. Add the files under `Source/` to the project
-4. Set include directories to match the engine layout (if required)
-5. Select `x64` and `Debug` or `Release`
-6. Build
+### Build Steps
+1. Open `Corebryo.slnx` in Visual Studio
+2. Select configuration: `Debug` or `Release`
+3. Select platform: `x64`
+4. Build the solution
+
+The solution contains:
+- **Engine** – Corebryo engine library
+- **Editor** – Development editor built on top of the engine
+- **Nuklear** – External library for the UI-layer of the editor
 
 ## Contributing
 
