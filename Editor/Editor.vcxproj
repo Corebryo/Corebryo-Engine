@@ -142,8 +142,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Engine.lib;vulkan-1.lib;user32.lib;gdi32.lib;shell32.lib;ole32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration)\;$(VULKAN_SDK)\Lib;$(SolutionDir)Binary;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Engine.lib;glfw3.lib;vulkan-1.lib;user32.lib;gdi32.lib;shell32.lib;ole32.lib;advapi32.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\denha\Downloads\GlfwLibrary\lib-vc2022;$(SolutionDir)x64\$(Configuration)\;$(VULKAN_SDK)\Lib;$(SolutionDir)Binary;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -151,6 +151,17 @@
       <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
+    <ClCompile Include="Source\Platform\Input\GlfwInput.cpp" />
+    <ClCompile Include="Source\Platform\Window\GlfwWindow.cpp" />
+    <ClCompile Include="Source\Platform\Windows\Win32PowerPerformance.cpp" />
+    <ClCompile Include="Source\Platform\Windows\Win32WindowUtils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Platform\Input\GlfwInput.h" />
+    <ClInclude Include="Source\Platform\PlatformIncludes.h" />
+    <ClInclude Include="Source\Platform\Window\GlfwWindow.h" />
+    <ClInclude Include="Source\Platform\Windows\Win32PowerPerformance.h" />
+    <ClInclude Include="Source\Platform\Windows\Win32WindowUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

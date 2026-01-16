@@ -5,10 +5,51 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Source Files\Platform">
+      <UniqueIdentifier>{5e4c3ad0-59c2-4f49-90f1-737fb07265a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\Input">
+      <UniqueIdentifier>{f3227f7f-df70-4b8b-a139-a214273a51af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\Window">
+      <UniqueIdentifier>{fb9b6a7a-33c2-4ce6-b0d7-5a78bd396cc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform\Windows">
+      <UniqueIdentifier>{b74a618b-5b7c-4089-a556-5329c304c563}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Platform\Input\GlfwInput.cpp">
+      <Filter>Source Files\Platform\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Platform\Window\GlfwWindow.cpp">
+      <Filter>Source Files\Platform\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Platform\Windows\Win32WindowUtils.cpp">
+      <Filter>Source Files\Platform\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Platform\Windows\Win32PowerPerformance.cpp">
+      <Filter>Source Files\Platform\Windows</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Platform\Input\GlfwInput.h">
+      <Filter>Source Files\Platform\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Platform\PlatformIncludes.h">
+      <Filter>Source Files\Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Platform\Window\GlfwWindow.h">
+      <Filter>Source Files\Platform\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Platform\Windows\Win32PowerPerformance.h">
+      <Filter>Source Files\Platform\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Platform\Windows\Win32WindowUtils.h">
+      <Filter>Source Files\Platform\Windows</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -23,6 +23,8 @@
  * THE SOFTWARE.
  */
 
+#include "Win32PowerPerformance.h"
+
 #include <Windows.h>
 #include <powrprof.h>
 

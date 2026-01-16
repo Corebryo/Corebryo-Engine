@@ -25,6 +25,7 @@
 
 #include "Platform/Input/GlfwInput.h"
 #include "Platform/Window/GlfwWindow.h"
+#include "Platform/Windows/Win32PowerPerformance.h"
 #include "Engine/EngineRuntime.h"
 #include "Engine/EngineState.h"
 #include "Input/InputState.h"
@@ -36,22 +37,29 @@
 #include <filesystem>
 #include <Windows.h>
 
-void SetHighPerformancePowerMode();
-
+/* Working directory root*/
 static void SetWorkingDirectoryToEngineRoot()
 {
+    /* Retrieve the full path of the current executable */
     char modulePath[MAX_PATH]{};
     const DWORD length = GetModuleFileNameA(nullptr, modulePath, MAX_PATH);
 
+    /* Abort if the executable path could not be resolved */
     if (length == 0 || length == MAX_PATH)
     {
         return;
     }
 
+    /* Convert executable path to a filesystem path */
     std::filesystem::path exePath(modulePath);
+
+    /* Resolve the solution root by walking up two directory levels */
     std::filesystem::path solutionDir = exePath.parent_path().parent_path();
+
+    /* Construct the expected Engine directory path */
     std::filesystem::path engineDir = solutionDir / "Engine";
 
+    /* Switch the current working directory if the Engine directory exists */
     if (std::filesystem::exists(engineDir))
     {
         SetCurrentDirectoryA(engineDir.string().c_str());

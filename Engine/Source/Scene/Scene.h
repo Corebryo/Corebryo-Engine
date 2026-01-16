@@ -29,6 +29,7 @@
 #include "Components/TransformComponent.h"
 #include "Components/MeshComponent.h"
 #include "Components/MaterialComponent.h"
+#include "TransformSystem.h"
 
 #include "Renderer/RenderItem.h"
 
@@ -68,12 +69,11 @@ private:
     std::vector<std::uint8_t> alive;
 
     /* Component storage. */
-    std::vector<TransformComponent> transforms;
+    TransformSystem transformSystem;
     std::vector<MeshComponent> meshes;
     std::vector<MaterialComponent> materials;
 
     /* Component presence flags. */
-    std::vector<std::uint8_t> hasTransform;
     std::vector<std::uint8_t> hasMesh;
     std::vector<std::uint8_t> hasMaterial;
 

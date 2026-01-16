@@ -25,8 +25,8 @@
 
 #include "GlfwInput.h"
 
-#include "../../Engine/EngineState.h"
-#include "../../Input/InputState.h"
+#include "Engine/EngineState.h"
+#include "Input/InputState.h"
 #include "../PlatformIncludes.h"
 
 /* Translate key */

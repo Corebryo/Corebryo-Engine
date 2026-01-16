@@ -25,101 +25,11 @@
 
 #include "Scene.h"
 
-#include <cmath>
 #include <cstdint>
 
- /* Local math helpers for building transform matrices. */
+ /* Local helpers. */
 namespace
 {
-    /* Matrix storage is assumed to be column-major with translation at [12..14]. */
-    constexpr int kTx = 12;
-    constexpr int kTy = 13;
-    constexpr int kTz = 14;
-
-    /* Build translation matrix from world position. */
-    Mat4 BuildTranslation(const Vec3& position)
-    {
-        Mat4 m = Mat4::Identity();
-
-        m.m[kTx] = position.x;
-        m.m[kTy] = position.y;
-        m.m[kTz] = position.z;
-
-        return m;
-    }
-
-    /* Build scale matrix from per-axis scale. */
-    Mat4 BuildScale(const Vec3& scale)
-    {
-        Mat4 m = Mat4::Identity();
-
-        m.m[0] = scale.x;
-        m.m[5] = scale.y;
-        m.m[10] = scale.z;
-
-        return m;
-    }
-
-    /* Build rotation matrix around X axis. */
-    Mat4 BuildRotationX(float angle)
-    {
-        Mat4 m = Mat4::Identity();
-
-        const float c = std::cos(angle);
-        const float s = std::sin(angle);
-
-        m.m[5] = c;
-        m.m[6] = s;
-        m.m[9] = -s;
-        m.m[10] = c;
-
-        return m;
-    }
-
-    /* Build rotation matrix around Y axis. */
-    Mat4 BuildRotationY(float angle)
-    {
-        Mat4 m = Mat4::Identity();
-
-        const float c = std::cos(angle);
-        const float s = std::sin(angle);
-
-        m.m[0] = c;
-        m.m[2] = -s;
-        m.m[8] = s;
-        m.m[10] = c;
-
-        return m;
-    }
-
-    /* Build rotation matrix around Z axis. */
-    Mat4 BuildRotationZ(float angle)
-    {
-        Mat4 m = Mat4::Identity();
-
-        const float c = std::cos(angle);
-        const float s = std::sin(angle);
-
-        m.m[0] = c;
-        m.m[1] = s;
-        m.m[4] = -s;
-        m.m[5] = c;
-
-        return m;
-    }
-
-    /* Compose a model matrix from TRS, using the engine's multiplication convention. */
-    Mat4 BuildModelMatrix(const TransformComponent& transform)
-    {
-        /* Order is T * Rz * Ry * Rx * S, matching the original behavior. */
-        return
-            BuildTranslation(transform.Position) *
-            BuildRotationZ(transform.Rotation.z) *
-            BuildRotationY(transform.Rotation.y) *
-            BuildRotationX(transform.Rotation.x) *
-            BuildScale(transform.Scale);
-    }
-
     /* Validate that an entity id is inside the scene arrays. */
     bool IsValidId(std::uint32_t id, std::size_t count)
     {
@@ -166,7 +76,7 @@ void Scene::DestroyEntity(Entity entity)
     alive[id] = false;
 
     /* Drop component presence bits. */
-    hasTransform[id] = false;
+    transformSystem.RemoveComponent(id);
     hasMesh[id] = false;
     hasMaterial[id] = false;
 }
@@ -176,13 +86,7 @@ TransformComponent* Scene::GetTransform(Entity entity)
 {
     const std::uint32_t id = entity.GetId();
 
-    /* Validate index and presence bit. */
-    if (id >= transforms.size() || !hasTransform[id])
-    {
-        return nullptr;
-    }
-
-    return &transforms[id];
+    return transformSystem.GetComponent(id);
 }
 
 /* Retrieve mesh component if present. */
@@ -221,10 +125,8 @@ TransformComponent& Scene::AddTransform(Entity entity)
     /* Ensure arrays exist for this id. */
     EnsureSize(id);
 
-    /* Mark component present, data lives in a dense vector. */
-    hasTransform[id] = true;
-
-    return transforms[id];
+    /* Add transform through the transform system. */
+    return transformSystem.AddComponent(id);
 }
 
 /* Attach mesh component to entity. */
@@ -272,19 +174,18 @@ void Scene::BuildRenderList(std::vector<RenderItem>& outItems) const
             continue;
         }
 
-        if (!hasTransform[id] || !hasMesh[id] || !hasMaterial[id])
+        if (!transformSystem.HasComponent(id) || !hasMesh[id] || !hasMaterial[id])
         {
             continue;
         }
 
-        const TransformComponent& transform = transforms[id];
         const MeshComponent& mesh = meshes[id];
         const MaterialComponent& material = materials[id];
 
         RenderItem item{};
         item.MeshPtr = mesh.MeshPtr;
         item.MaterialPtr = material.MaterialPtr;
-        item.Model = BuildModelMatrix(transform);
+        item.Model = transformSystem.GetModelMatrix(id);
 
         outItems.push_back(item);
     }
@@ -304,11 +205,11 @@ void Scene::EnsureSize(std::uint32_t id)
 
     alive.resize(newSize, false);
 
-    transforms.resize(newSize);
     meshes.resize(newSize);
     materials.resize(newSize);
 
-    hasTransform.resize(newSize, false);
     hasMesh.resize(newSize, false);
     hasMaterial.resize(newSize, false);
+
+    transformSystem.EnsureSize(id);
 }

@@ -21,10 +21,6 @@
   <ItemGroup>
     <ClCompile Include="Source\Engine\EngineRuntime.cpp" />
     <ClCompile Include="Source\Engine\EngineState.cpp" />
-    <ClCompile Include="Source\Platform\Window\GlfwWindow.cpp" />
-    <ClCompile Include="Source\Platform\Input\GlfwInput.cpp" />
-    <ClCompile Include="Source\Platform\Windows\Win32WindowUtils.cpp" />
-    <ClCompile Include="Source\Platform\Windows\Win32PowerPerformance.cpp" />
     <ClCompile Include="Source\Input\InputState.cpp" />
     <ClCompile Include="Source\Renderer\Vulkan\Core\VulkanBuffer.cpp" />
     <ClCompile Include="Source\Renderer\Vulkan\Core\VulkanDevice.cpp" />
@@ -39,6 +35,7 @@
     <ClCompile Include="Source\Renderer\Vulkan\Render\VulkanRenderPass.cpp" />
     <ClCompile Include="Source\Scene\EngineCamera.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />
+    <ClCompile Include="Source\Scene\TransformSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Engine\EngineRuntime.h" />
@@ -46,10 +43,6 @@
     <ClInclude Include="Source\Math\MathMatrix.h" />
     <ClInclude Include="Source\Math\MathTypes.h" />
     <ClInclude Include="Source\Math\MathVector.h" />
-    <ClInclude Include="Source\Platform\Window\GlfwWindow.h" />
-    <ClInclude Include="Source\Platform\Input\GlfwInput.h" />
-    <ClInclude Include="Source\Platform\Windows\Win32WindowUtils.h" />
-    <ClInclude Include="Source\Platform\PlatformIncludes.h" />
     <ClInclude Include="Source\Input\InputState.h" />
     <ClInclude Include="Source\Renderer\RenderItem.h" />
     <ClInclude Include="Source\Renderer\Vulkan\Core\VulkanBuffer.h" />
@@ -71,6 +64,7 @@
     <ClInclude Include="Source\Scene\EngineCamera.h" />
     <ClInclude Include="Source\Scene\Entity.h" />
     <ClInclude Include="Source\Scene\Scene.h" />
+    <ClInclude Include="Source\Scene\TransformSystem.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

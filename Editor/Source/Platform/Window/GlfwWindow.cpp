@@ -25,7 +25,6 @@
 
 #include "GlfwWindow.h"
 
-#include "../../Input/InputState.h"
 #include "../PlatformIncludes.h"
 
 #if defined(_WIN32)

@@ -34,18 +34,6 @@
     <ClCompile Include="Source\Renderer\Vulkan\Swapchain\VulkanSwapchain.cpp">
       <Filter>Source Files\Renderer\Vulkan\Swapchain</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Platform\Windows\Win32WindowUtils.cpp">
-      <Filter>Source Files\Platform\Windows</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Platform\Windows\Win32PowerPerformance.cpp">
-      <Filter>Source Files\Platform\Windows</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Platform\Window\GlfwWindow.cpp">
-      <Filter>Source Files\Platform\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Platform\Input\GlfwInput.cpp">
-      <Filter>Source Files\Platform\Input</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Input\InputState.cpp">
       <Filter>Source Files\Input</Filter>
     </ClCompile>
@@ -56,6 +44,9 @@
       <Filter>Source Files\Renderer\Vulkan\Render</Filter>
     </ClCompile>
     <ClCompile Include="Source\Scene\Scene.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\TransformSystem.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
     <ClCompile Include="Source\Renderer\Vulkan\Render\VulkanFramebuffers.cpp">
@@ -96,18 +87,6 @@
     <ClInclude Include="Source\Renderer\Vulkan\Swapchain\VulkanSwapchain.h">
       <Filter>Source Files\Renderer\Vulkan\Swapchain</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Platform\PlatformIncludes.h">
-      <Filter>Source Files\Platform</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Platform\Windows\Win32WindowUtils.h">
-      <Filter>Source Files\Platform\Windows</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Platform\Window\GlfwWindow.h">
-      <Filter>Source Files\Platform\Window</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Platform\Input\GlfwInput.h">
-      <Filter>Source Files\Platform\Input</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Math\MathMatrix.h">
       <Filter>Source Files\Math</Filter>
     </ClInclude>
@@ -147,6 +126,9 @@
     <ClInclude Include="Source\Scene\Scene.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Scene\TransformSystem.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Scene\Collision\AABB.h">
       <Filter>Source Files\Scene\Collisions</Filter>
     </ClInclude>
@@ -181,18 +163,6 @@
     </Filter>
     <Filter Include="Source Files\Renderer\Vulkan\Swapchain">
       <UniqueIdentifier>{fabed223-44c3-42ba-8dc6-d2398acd24cf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Platform">
-      <UniqueIdentifier>{0ef18f11-a99f-49f1-9c44-38a976ccbb42}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Platform\Windows">
-      <UniqueIdentifier>{379c85be-e25f-4f7f-a03d-c438195411f6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Platform\Window">
-      <UniqueIdentifier>{f2d819a1-7291-427c-8187-cd3005e352de}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Platform\Input">
-      <UniqueIdentifier>{e8b60bee-e3c3-44e8-86f1-76cb6ed4faf8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Math">
       <UniqueIdentifier>{68ecb424-9097-419e-be81-eb85058232a7}</UniqueIdentifier>
