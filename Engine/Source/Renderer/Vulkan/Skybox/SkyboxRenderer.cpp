@@ -759,12 +759,11 @@ void SkyboxRenderer::Record(
     Mat4 projection = Mat4::Perspective(fovRadians, static_cast<float>(Extent.width) /
         static_cast<float>(Extent.height), 0.1f, 1000.0f);
 
-    Vec3 position = Camera->GetPosition();
     Vec3 front = Camera->GetFront();
     Vec3 up = Camera->GetUp();
 
-    /* Build a rotation-only view matrix from the camera view. */
-    Mat4 view = Mat4::LookAt(position, position + front, up);
+    /* Build a rotation-only view matrix from the camera orientation. */
+    Mat4 view = Mat4::LookAt(Vec3(0.0f, 0.0f, 0.0f), front, up);
     Mat4 viewRotation = Mat4::Identity();
     viewRotation.m[0] = view.m[0];
     viewRotation.m[1] = view.m[1];
@@ -775,6 +774,7 @@ void SkyboxRenderer::Record(
     viewRotation.m[8] = view.m[8];
     viewRotation.m[9] = view.m[9];
     viewRotation.m[10] = view.m[10];
+    /* Combine projection with rotation-only view. */
     Mat4 viewProjection = projection * viewRotation;
 
     /* Invert rotation-only view by transpose. */
