@@ -121,113 +121,151 @@ TransformSystem::~TransformSystem()
 /* Access transform for modification. */
 TransformComponent* TransformSystem::GetComponent(std::uint32_t id)
 {
-    if (!IsValidId(id) || !present[id])
+    /* Resolve packed index for entity id. */
+    const std::uint32_t index = GetIndex(id);
+
+    if (index == kInvalidIndex)
     {
         return nullptr;
     }
 
-    dirty[id] = true;
-    return &components[id];
+    return &components[index];
 }
 
 /* Access transform without marking dirty. */
 const TransformComponent* TransformSystem::GetComponent(std::uint32_t id) const
 {
-    if (!IsValidId(id) || !present[id])
+    /* Resolve packed index for entity id. */
+    const std::uint32_t index = GetIndex(id);
+
+    if (index == kInvalidIndex)
     {
         return nullptr;
     }
 
-    return &components[id];
+    return &components[index];
 }
 
 /* Add transform for entity id. */
 TransformComponent& TransformSystem::AddComponent(std::uint32_t id)
 {
+    /* Ensure sparse index can reference the entity. */
     EnsureSize(id);
 
-    present[id] = true;
-    dirty[id] = true;
-    modelCache[id] = identityCache;
+    const std::uint32_t existingIndex = indexByEntity[id];
+    if (existingIndex != kInvalidIndex)
+    {
+        /* Reuse existing component. */
+        dirty[existingIndex] = true;
+        return components[existingIndex];
+    }
 
-    return components[id];
+    /* Append a new packed component slot. */
+    const std::uint32_t newIndex = static_cast<std::uint32_t>(components.size());
+    components.push_back(TransformComponent());
+    entityIds.push_back(id);
+    modelCache.push_back(identityCache);
+    dirty.push_back(1);
+    indexByEntity[id] = newIndex;
+
+    return components[newIndex];
 }
 
 /* Remove transform for entity id. */
 void TransformSystem::RemoveComponent(std::uint32_t id)
 {
-    if (!IsValidId(id))
+    /* Resolve packed index for entity id. */
+    const std::uint32_t index = GetIndex(id);
+
+    if (index == kInvalidIndex)
     {
         return;
     }
 
-    present[id] = false;
-    dirty[id] = false;
-    components[id] = TransformComponent();
-    modelCache[id] = identityCache;
+    /* Swap with the last element to keep storage packed. */
+    const std::uint32_t lastIndex =
+        static_cast<std::uint32_t>(components.size() - 1);
+
+    if (index != lastIndex)
+    {
+        components[index] = components[lastIndex];
+        entityIds[index] = entityIds[lastIndex];
+        modelCache[index] = modelCache[lastIndex];
+        dirty[index] = dirty[lastIndex];
+        indexByEntity[entityIds[index]] = index;
+    }
+
+    /* Remove the last packed entry. */
+    components.pop_back();
+    entityIds.pop_back();
+    modelCache.pop_back();
+    dirty.pop_back();
+    indexByEntity[id] = kInvalidIndex;
 }
 
 /* Query presence for entity id. */
 bool TransformSystem::HasComponent(std::uint32_t id) const
 {
-    if (!IsValidId(id))
-    {
-        return false;
-    }
-
-    return present[id] != 0;
+    /* Check if entity has a valid packed index. */
+    return GetIndex(id) != kInvalidIndex;
 }
 
 /* Get cached model matrix, rebuilding when dirty. */
 const Mat4& TransformSystem::GetModelMatrix(std::uint32_t id) const
 {
-    if (!IsValidId(id) || !present[id])
+    /* Resolve packed index for entity id. */
+    const std::uint32_t index = GetIndex(id);
+
+    if (index == kInvalidIndex)
     {
         return identityCache;
     }
 
-    if (dirty[id])
+    if (dirty[index])
     {
-        modelCache[id] = BuildModelMatrix(components[id]);
-        dirty[id] = false;
+        modelCache[index] = BuildModelMatrix(components[index]);
+        dirty[index] = 0;
     }
 
-    return modelCache[id];
+    return modelCache[index];
 }
 
 /* Explicitly mark transform dirty. */
 void TransformSystem::MarkDirty(std::uint32_t id)
 {
-    if (!IsValidId(id) || !present[id])
+    /* Resolve packed index for entity id. */
+    const std::uint32_t index = GetIndex(id);
+
+    if (index == kInvalidIndex)
     {
         return;
     }
 
-    dirty[id] = true;
+    dirty[index] = 1;
 }
 
 /* Ensure storage covers entity id. */
 void TransformSystem::EnsureSize(std::uint32_t id)
 {
-    if (IsValidId(id))
+    /* Grow sparse index array when needed. */
+    if (id < indexByEntity.size())
     {
         return;
     }
 
     const std::size_t newSize = static_cast<std::size_t>(id) + 1;
-    components.resize(newSize);
-    modelCache.resize(newSize, identityCache);
-    present.resize(newSize, 0);
-    dirty.resize(newSize, 0);
+    indexByEntity.resize(newSize, kInvalidIndex);
 }
 
 /* Reset all transforms. */
 void TransformSystem::Clear()
 {
+    /* Clear packed storage and sparse indices. */
     components.clear();
+    entityIds.clear();
     modelCache.clear();
-    present.clear();
     dirty.clear();
+    indexByEntity.clear();
 }
 
 /* Recompute cached model matrix. */
@@ -242,7 +280,12 @@ Mat4 TransformSystem::BuildModelMatrix(const TransformComponent& transform) cons
 }
 
 /* Validate id against storage. */
-bool TransformSystem::IsValidId(std::uint32_t id) const
+std::uint32_t TransformSystem::GetIndex(std::uint32_t id) const
 {
-    return static_cast<std::size_t>(id) < components.size();
+    if (id >= indexByEntity.size())
+    {
+        return kInvalidIndex;
+    }
+
+    return indexByEntity[id];
 }

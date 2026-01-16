@@ -29,6 +29,7 @@
 #include "Math/MathTypes.h"
 
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 /* Manages transforms and cached model matrices. */
@@ -39,6 +40,7 @@ public:
     ~TransformSystem();
 
     /* Access transform for modification. */
+    /* Caller must mark dirty after mutation. */
     TransformComponent* GetComponent(std::uint32_t id);
 
     /* Access transform without marking dirty. */
@@ -69,13 +71,29 @@ private:
     /* Recompute cached model matrix. */
     Mat4 BuildModelMatrix(const TransformComponent& transform) const;
 
-    /* Validate id against storage. */
-    bool IsValidId(std::uint32_t id) const;
+    /* Resolve packed index for entity id. */
+    std::uint32_t GetIndex(std::uint32_t id) const;
 
 private:
+    /* Invalid index sentinel for sparse mapping. */
+    static constexpr std::uint32_t kInvalidIndex =
+        std::numeric_limits<std::uint32_t>::max();
+
+    /* Packed transform components. */
     std::vector<TransformComponent> components;
+
+    /* Entity ids for packed components. */
+    std::vector<std::uint32_t> entityIds;
+
+    /* Sparse lookup from entity id to packed index. */
+    std::vector<std::uint32_t> indexByEntity;
+
+    /* Cached model matrices per packed component. */
     mutable std::vector<Mat4> modelCache;
-    std::vector<std::uint8_t> present;
+
+    /* Dirty flags per packed component. */
     mutable std::vector<std::uint8_t> dirty;
+
+    /* Identity matrix cache for invalid lookups. */
     Mat4 identityCache;
 };

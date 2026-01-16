@@ -26,38 +26,42 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 
-struct TransformComponent;
-struct MeshComponent;
-struct MaterialComponent;
-
-class Scene;
-
-/* Entity handle bound to a owning scene. */
+/* Lightweight entity handle using an id. */
 class Entity
 {
 public:
     Entity() = default;
-    Entity(std::uint32_t InId, Scene* InScene);
+    explicit Entity(std::uint32_t InId);
 
     /* Entity id access. */
     std::uint32_t GetId() const;
     bool IsValid() const;
 
-    /* Component accessors. */
-    TransformComponent* GetTransform() const;
-    MeshComponent* GetMesh() const;
-    MaterialComponent* GetMaterial() const;
-
-    /* Component creation helpers. */
-    TransformComponent& AddTransform();
-    MeshComponent& AddMesh();
-    MaterialComponent& AddMaterial();
-
 private:
-    /* Internal entity id. */
-    std::uint32_t Id = 0;
+    /* Invalid entity id sentinel. */
+    static constexpr std::uint32_t kInvalidId =
+        std::numeric_limits<std::uint32_t>::max();
 
-    /* Owning scene pointer. */
-    Scene* Owner = nullptr;
+    /* Internal entity id. */
+    std::uint32_t Id = kInvalidId;
 };
+
+inline Entity::Entity(std::uint32_t InId)
+    : Id(InId)
+{
+    /* Store entity id. */
+}
+
+inline std::uint32_t Entity::GetId() const
+{
+    /* Return stored id. */
+    return Id;
+}
+
+inline bool Entity::IsValid() const
+{
+    /* Check against sentinel value. */
+    return Id != kInvalidId;
+}

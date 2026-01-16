@@ -99,6 +99,7 @@ void GlfwInput::ApplyInputMode(GLFWwindow* window)
         g_InputState.FirstMouse = true;
         SetMouseCaptured(true);
     }
+
     else if (!shouldCapture && isCaptured)
     {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);

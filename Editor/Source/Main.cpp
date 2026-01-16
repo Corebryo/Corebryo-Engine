@@ -23,6 +23,8 @@
  * THE SOFTWARE.
  */
 
+#include <Windows.h>
+
 #include "Platform/Input/GlfwInput.h"
 #include "Platform/Window/GlfwWindow.h"
 #include "Platform/Windows/Win32PowerPerformance.h"
@@ -35,7 +37,6 @@
 #include <cstdio>
 #include <cstdint>
 #include <filesystem>
-#include <Windows.h>
 
 /* Working directory root*/
 static void SetWorkingDirectoryToEngineRoot()

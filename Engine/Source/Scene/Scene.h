@@ -35,6 +35,7 @@
 
 #include <vector>
 #include <cstdint>
+#include <limits>
 
  /* Scene owns entity lifetime and component storage. */
 class Scene
@@ -48,9 +49,13 @@ public:
     void DestroyEntity(Entity entity);
 
     /* Component accessors. */
+    /* Caller must mark transforms dirty after mutation. */
     TransformComponent* GetTransform(Entity entity);
     MeshComponent* GetMesh(Entity entity);
     MaterialComponent* GetMaterial(Entity entity);
+
+    /* Mark transform data dirty after modification. */
+    void MarkTransformDirty(Entity entity);
 
     /* Component creation. */
     TransformComponent& AddTransform(Entity entity);
@@ -64,65 +69,33 @@ private:
     /* Ensure internal storage can hold entity id. */
     void EnsureSize(std::uint32_t id);
 
+    /* Resolve mesh index for entity id. */
+    std::uint32_t GetMeshIndex(std::uint32_t id) const;
+
+    /* Resolve material index for entity id. */
+    std::uint32_t GetMaterialIndex(std::uint32_t id) const;
+
+    /* Remove mesh component for entity id. */
+    void RemoveMeshComponent(std::uint32_t id);
+
+    /* Remove material component for entity id. */
+    void RemoveMaterialComponent(std::uint32_t id);
+
 private:
+    /* Invalid component index sentinel. */
+    static constexpr std::uint32_t kInvalidComponentIndex =
+        std::numeric_limits<std::uint32_t>::max();
+
     /* Entity state. */
     std::vector<std::uint8_t> alive;
 
     /* Component storage. */
     TransformSystem transformSystem;
     std::vector<MeshComponent> meshes;
+    std::vector<std::uint32_t> meshEntities;
+    std::vector<std::uint32_t> meshIndexByEntity;
     std::vector<MaterialComponent> materials;
-
-    /* Component presence flags. */
-    std::vector<std::uint8_t> hasMesh;
-    std::vector<std::uint8_t> hasMaterial;
+    std::vector<std::uint32_t> materialEntities;
+    std::vector<std::uint32_t> materialIndexByEntity;
 
 };
-
-/* Entity inline helpers */
-
-inline Entity::Entity(std::uint32_t id, Scene* scene)
-    : Id(id)
-    , Owner(scene)
-{
-}
-
-inline std::uint32_t Entity::GetId() const
-{
-    return Id;
-}
-
-inline bool Entity::IsValid() const
-{
-    return Owner != nullptr;
-}
-
-inline TransformComponent* Entity::GetTransform() const
-{
-    return Owner ? Owner->GetTransform(*this) : nullptr;
-}
-
-inline MeshComponent* Entity::GetMesh() const
-{
-    return Owner ? Owner->GetMesh(*this) : nullptr;
-}
-
-inline MaterialComponent* Entity::GetMaterial() const
-{
-    return Owner ? Owner->GetMaterial(*this) : nullptr;
-}
-
-inline TransformComponent& Entity::AddTransform()
-{
-    return Owner->AddTransform(*this);
-}
-
-inline MeshComponent& Entity::AddMesh()
-{
-    return Owner->AddMesh(*this);
-}
-
-inline MaterialComponent& Entity::AddMaterial()
-{
-    return Owner->AddMaterial(*this);
-}

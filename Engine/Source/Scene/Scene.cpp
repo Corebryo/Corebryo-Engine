@@ -58,7 +58,7 @@ Entity Scene::CreateEntity()
     EnsureSize(id);
     alive[id] = true;
 
-    return Entity(id, this);
+    return Entity(id);
 }
 
 /* Destroy entity and clear all component flags. */
@@ -77,8 +77,8 @@ void Scene::DestroyEntity(Entity entity)
 
     /* Drop component presence bits. */
     transformSystem.RemoveComponent(id);
-    hasMesh[id] = false;
-    hasMaterial[id] = false;
+    RemoveMeshComponent(id);
+    RemoveMaterialComponent(id);
 }
 
 /* Retrieve transform component if present. */
@@ -94,13 +94,15 @@ MeshComponent* Scene::GetMesh(Entity entity)
 {
     const std::uint32_t id = entity.GetId();
 
-    /* Validate index and presence bit. */
-    if (id >= meshes.size() || !hasMesh[id])
+    /* Resolve packed mesh index. */
+    const std::uint32_t index = GetMeshIndex(id);
+
+    if (index == kInvalidComponentIndex)
     {
         return nullptr;
     }
 
-    return &meshes[id];
+    return &meshes[index];
 }
 
 /* Retrieve material component if present. */
@@ -108,13 +110,24 @@ MaterialComponent* Scene::GetMaterial(Entity entity)
 {
     const std::uint32_t id = entity.GetId();
 
-    /* Validate index and presence bit. */
-    if (id >= materials.size() || !hasMaterial[id])
+    /* Resolve packed material index. */
+    const std::uint32_t index = GetMaterialIndex(id);
+
+    if (index == kInvalidComponentIndex)
     {
         return nullptr;
     }
 
-    return &materials[id];
+    return &materials[index];
+}
+
+/* Mark transform data dirty after modification. */
+void Scene::MarkTransformDirty(Entity entity)
+{
+    const std::uint32_t id = entity.GetId();
+
+    /* Mark transform cache dirty for this entity. */
+    transformSystem.MarkDirty(id);
 }
 
 /* Attach transform component to entity. */
@@ -137,10 +150,20 @@ MeshComponent& Scene::AddMesh(Entity entity)
     /* Ensure arrays exist for this id. */
     EnsureSize(id);
 
-    /* Mark component present, data lives in a dense vector. */
-    hasMesh[id] = true;
+    /* Reuse existing component if already present. */
+    const std::uint32_t existingIndex = GetMeshIndex(id);
+    if (existingIndex != kInvalidComponentIndex)
+    {
+        return meshes[existingIndex];
+    }
 
-    return meshes[id];
+    /* Append a packed mesh component. */
+    const std::uint32_t newIndex = static_cast<std::uint32_t>(meshes.size());
+    meshes.push_back(MeshComponent());
+    meshEntities.push_back(id);
+    meshIndexByEntity[id] = newIndex;
+
+    return meshes[newIndex];
 }
 
 /* Attach material component to entity. */
@@ -151,10 +174,20 @@ MaterialComponent& Scene::AddMaterial(Entity entity)
     /* Ensure arrays exist for this id. */
     EnsureSize(id);
 
-    /* Mark component present, data lives in a dense vector. */
-    hasMaterial[id] = true;
+    /* Reuse existing component if already present. */
+    const std::uint32_t existingIndex = GetMaterialIndex(id);
+    if (existingIndex != kInvalidComponentIndex)
+    {
+        return materials[existingIndex];
+    }
 
-    return materials[id];
+    /* Append a packed material component. */
+    const std::uint32_t newIndex = static_cast<std::uint32_t>(materials.size());
+    materials.push_back(MaterialComponent());
+    materialEntities.push_back(id);
+    materialIndexByEntity[id] = newIndex;
+
+    return materials[newIndex];
 }
 
 /* Build renderable items from active scene entities. */
@@ -174,13 +207,25 @@ void Scene::BuildRenderList(std::vector<RenderItem>& outItems) const
             continue;
         }
 
-        if (!transformSystem.HasComponent(id) || !hasMesh[id] || !hasMaterial[id])
+        if (!transformSystem.HasComponent(id))
         {
             continue;
         }
 
-        const MeshComponent& mesh = meshes[id];
-        const MaterialComponent& material = materials[id];
+        const std::uint32_t meshIndex = GetMeshIndex(id);
+        if (meshIndex == kInvalidComponentIndex)
+        {
+            continue;
+        }
+
+        const std::uint32_t materialIndex = GetMaterialIndex(id);
+        if (materialIndex == kInvalidComponentIndex)
+        {
+            continue;
+        }
+
+        const MeshComponent& mesh = meshes[meshIndex];
+        const MaterialComponent& material = materials[materialIndex];
 
         RenderItem item{};
         item.MeshPtr = mesh.MeshPtr;
@@ -200,16 +245,85 @@ void Scene::EnsureSize(std::uint32_t id)
         return;
     }
 
-    /* We store components densely by entity id. */
+    /* Resize id-indexed state and sparse component mappings. */
     const std::size_t newSize = static_cast<std::size_t>(id) + 1;
 
     alive.resize(newSize, false);
 
-    meshes.resize(newSize);
-    materials.resize(newSize);
-
-    hasMesh.resize(newSize, false);
-    hasMaterial.resize(newSize, false);
+    meshIndexByEntity.resize(newSize, kInvalidComponentIndex);
+    materialIndexByEntity.resize(newSize, kInvalidComponentIndex);
 
     transformSystem.EnsureSize(id);
+}
+
+/* Resolve mesh index for entity id. */
+std::uint32_t Scene::GetMeshIndex(std::uint32_t id) const
+{
+    if (!IsValidId(id, meshIndexByEntity.size()))
+    {
+        return kInvalidComponentIndex;
+    }
+
+    return meshIndexByEntity[id];
+}
+
+/* Resolve material index for entity id. */
+std::uint32_t Scene::GetMaterialIndex(std::uint32_t id) const
+{
+    if (!IsValidId(id, materialIndexByEntity.size()))
+    {
+        return kInvalidComponentIndex;
+    }
+
+    return materialIndexByEntity[id];
+}
+
+/* Remove mesh component for entity id. */
+void Scene::RemoveMeshComponent(std::uint32_t id)
+{
+    const std::uint32_t index = GetMeshIndex(id);
+    if (index == kInvalidComponentIndex)
+    {
+        return;
+    }
+
+    const std::uint32_t lastIndex =
+        static_cast<std::uint32_t>(meshes.size() - 1);
+
+    if (index != lastIndex)
+    {
+        meshes[index] = meshes[lastIndex];
+        meshEntities[index] = meshEntities[lastIndex];
+        meshIndexByEntity[meshEntities[index]] = index;
+    }
+
+    /* Remove the last packed entry. */
+    meshes.pop_back();
+    meshEntities.pop_back();
+    meshIndexByEntity[id] = kInvalidComponentIndex;
+}
+
+/* Remove material component for entity id. */
+void Scene::RemoveMaterialComponent(std::uint32_t id)
+{
+    const std::uint32_t index = GetMaterialIndex(id);
+    if (index == kInvalidComponentIndex)
+    {
+        return;
+    }
+
+    const std::uint32_t lastIndex =
+        static_cast<std::uint32_t>(materials.size() - 1);
+
+    if (index != lastIndex)
+    {
+        materials[index] = materials[lastIndex];
+        materialEntities[index] = materialEntities[lastIndex];
+        materialIndexByEntity[materialEntities[index]] = index;
+    }
+
+    /* Remove the last packed entry. */
+    materials.pop_back();
+    materialEntities.pop_back();
+    materialIndexByEntity[id] = kInvalidComponentIndex;
 }
