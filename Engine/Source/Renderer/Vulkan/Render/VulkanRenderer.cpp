@@ -26,6 +26,7 @@
 #include "VulkanRenderer.h"
 
 #include "Renderer/Vulkan/Pipeline/VulkanPipeline.h"
+#include "Renderer/Vulkan/Skybox/SkyboxRenderer.h"
 #include "Scene/EngineCamera.h"
 #include "Renderer/Vulkan/Render/WicTextureLoader.h"
 
@@ -455,6 +456,12 @@ bool VulkanRenderer::Create(
         std::fprintf(stderr, "VulkanRenderer::Create: Pipeline::Create failed\n");
         return false;
     }
+    /* Create skybox resources. */
+    if (!Skybox.Create(Device, PhysicalDevice, RenderPass, GraphicsQueue, GraphicsQueueFamily))
+    {
+        std::fprintf(stderr, "VulkanRenderer::Create: Skybox::Create failed\n");
+        return false;
+    }
     static const Vertex kCubeVertices[] = {
         { { -0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f } },
         { {  0.5f, -0.5f,  0.5f }, { 1.0f, 0.0f } },
@@ -787,39 +794,10 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
     scissor.offset = { 0, 0 };
     scissor.extent = SwapchainExtent;
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline->GetSkyHandle());
-    vkCmdBindDescriptorSets(
-        commandBuffer,
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        Pipeline->GetLayout(),
-        0,
-        1,
-        &DescriptorSet,
-        0,
-        nullptr);
-    VkBuffer skyVertexBuffer = CubeMesh.VertexBuffer.GetBuffer();
-    if (skyVertexBuffer != VK_NULL_HANDLE)
-    {
-        VkDeviceSize skyOffsets[] = { 0 };
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &skyVertexBuffer, skyOffsets);
-    }
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-    PushConstants skyPush{};
-    skyPush.MVP = Mat4::Identity();
-    skyPush.Model = Mat4::Identity();
-    skyPush.BaseColor = Vec3(1.0f, 1.0f, 1.0f);
-    skyPush.Ambient = 0.0f;
-    skyPush.Alpha = 1.0f;
-    skyPush.Mode = 0;
-    vkCmdPushConstants(
-        commandBuffer,
-        Pipeline->GetLayout(),
-        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-        0,
-        sizeof(PushConstants),
-        &skyPush);
-    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+    /* Render skybox before scene geometry. */
+    Skybox.Record(commandBuffer, SwapchainExtent, Camera);
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline->GetWorldHandle());
     vkCmdBindDescriptorSets(
@@ -948,6 +926,8 @@ void VulkanRenderer::Destroy(VkDevice Device)
         DestroyDepthResources(activeDevice);
         DestroyColorResources(activeDevice);
         DestroyTextureResources(activeDevice);
+        /* Release skybox resources. */
+        Skybox.Destroy(activeDevice);
 
         if (CommandPool != VK_NULL_HANDLE)
         {
@@ -1070,6 +1050,12 @@ bool VulkanRenderer::Recreate(
     if (!CreateFramebuffers(Device, RenderPass, SwapchainFormat, SwapchainImageViews, Extent))
     {
         std::fprintf(stderr, "VulkanRenderer::Recreate: CreateFramebuffers failed\n");
+        return false;
+    }
+    /* Recreate skybox pipeline for the new render pass. */
+    if (!Skybox.Recreate(Device, RenderPass))
+    {
+        std::fprintf(stderr, "VulkanRenderer::Recreate: Skybox::Recreate failed\n");
         return false;
     }
 

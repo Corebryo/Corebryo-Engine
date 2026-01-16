@@ -22,6 +22,12 @@
     <ClCompile Include="Source\Renderer\Vulkan\Pipeline\VulkanPipeline.cpp">
       <Filter>Source Files\Renderer\Vulkan\Pipeline</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Skybox\SkyboxPipeline.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Skybox</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Vulkan\Skybox\SkyboxRenderer.cpp">
+      <Filter>Source Files\Renderer\Vulkan\Skybox</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Renderer\Vulkan\Render\VulkanRenderer.cpp">
       <Filter>Source Files\Renderer\Vulkan\Render</Filter>
     </ClCompile>
@@ -74,6 +80,12 @@
     </ClInclude>
     <ClInclude Include="Source\Renderer\Vulkan\Pipeline\VulkanPipeline.h">
       <Filter>Source Files\Renderer\Vulkan\Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Skybox\SkyboxPipeline.h">
+      <Filter>Source Files\Renderer\Vulkan\Skybox</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer\Vulkan\Skybox\SkyboxRenderer.h">
+      <Filter>Source Files\Renderer\Vulkan\Skybox</Filter>
     </ClInclude>
     <ClInclude Include="Source\Renderer\Vulkan\Render\VulkanRenderer.h">
       <Filter>Source Files\Renderer\Vulkan\Render</Filter>
@@ -163,6 +175,9 @@
     </Filter>
     <Filter Include="Source Files\Renderer\Vulkan\Render">
       <UniqueIdentifier>{dfed67c0-2849-420d-8dc3-7fea4b57c841}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer\Vulkan\Skybox">
+      <UniqueIdentifier>{d4ef51fa-9f15-4c62-97db-93fcd8b073bb}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Renderer\Vulkan\Swapchain">
       <UniqueIdentifier>{fabed223-44c3-42ba-8dc6-d2398acd24cf}</UniqueIdentifier>

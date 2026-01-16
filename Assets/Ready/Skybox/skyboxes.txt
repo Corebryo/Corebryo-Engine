@@ -1,0 +1,2 @@
+default=Default
+Default=Skybox/Default/Skybox.hdr;size=512

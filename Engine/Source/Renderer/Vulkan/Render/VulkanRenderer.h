@@ -28,6 +28,7 @@
 #include "../../../Math/MathTypes.h"
 #include "Mesh.h"
 #include "../../RenderItem.h"
+#include "../Skybox/SkyboxRenderer.h"
 
 #include <vulkan/vulkan.h>
 
@@ -185,6 +186,9 @@ private:
 
     /* Graphics pipeline. */
     VulkanPipeline* Pipeline = nullptr;
+
+    /* Skybox renderer. */
+    SkyboxRenderer Skybox;
 
     /* Uniform buffer. */
     VkBuffer UniformBuffer = VK_NULL_HANDLE;
