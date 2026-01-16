@@ -56,6 +56,7 @@ namespace
     };
 
     const float kPi = 3.1415926535f;
+    const uint32_t kSkyboxVertexCount = 36;
 
     /* Trim whitespace from both ends. */
     std::string Trim(const std::string& Text)
@@ -223,9 +224,9 @@ namespace
         std::getline(file, line);
         int width = 0;
         int height = 0;
-        if (std::sscanf(line.c_str(), "-Y %d +X %d", &height, &width) != 2)
+        if (::sscanf_s(line.c_str(), "-Y %d +X %d", &height, &width) != 2)
         {
-            if (std::sscanf(line.c_str(), "+X %d -Y %d", &width, &height) != 2)
+            if (::sscanf_s(line.c_str(), "+X %d -Y %d", &width, &height) != 2)
             {
                 std::fprintf(stderr, "SkyboxRenderer: Invalid HDR resolution %s\n", Path.c_str());
                 return false;
@@ -358,22 +359,28 @@ namespace
                     switch (face)
                     {
                     case 0:
-                        dir = Vec3(1.0f, b, -a);
+                        /* +X face */
+                        dir = Vec3(1.0f, -b, -a);
                         break;
                     case 1:
-                        dir = Vec3(-1.0f, b, a);
+                        /* -X face */
+                        dir = Vec3(-1.0f, -b, a);
                         break;
                     case 2:
-                        dir = Vec3(a, 1.0f, -b);
+                        /* +Y face */
+                        dir = Vec3(a, 1.0f, b);
                         break;
                     case 3:
-                        dir = Vec3(a, -1.0f, b);
+                        /* -Y face */
+                        dir = Vec3(a, -1.0f, -b);
                         break;
                     case 4:
-                        dir = Vec3(a, b, 1.0f);
+                        /* +Z face */
+                        dir = Vec3(a, -b, 1.0f);
                         break;
                     default:
-                        dir = Vec3(-a, b, -1.0f);
+                        /* -Z face */
+                        dir = Vec3(-a, -b, -1.0f);
                         break;
                     }
 
@@ -752,26 +759,52 @@ void SkyboxRenderer::Record(
     Mat4 projection = Mat4::Perspective(fovRadians, static_cast<float>(Extent.width) /
         static_cast<float>(Extent.height), 0.1f, 1000.0f);
 
+    Vec3 position = Camera->GetPosition();
     Vec3 front = Camera->GetFront();
     Vec3 up = Camera->GetUp();
 
-    Mat4 view = Mat4::LookAt(Vec3(0.0f, 0.0f, 0.0f), front, up);
-    Mat4 viewProjection = projection * view;
+    /* Build a rotation-only view matrix from the camera view. */
+    Mat4 view = Mat4::LookAt(position, position + front, up);
+    Mat4 viewRotation = Mat4::Identity();
+    viewRotation.m[0] = view.m[0];
+    viewRotation.m[1] = view.m[1];
+    viewRotation.m[2] = view.m[2];
+    viewRotation.m[4] = view.m[4];
+    viewRotation.m[5] = view.m[5];
+    viewRotation.m[6] = view.m[6];
+    viewRotation.m[8] = view.m[8];
+    viewRotation.m[9] = view.m[9];
+    viewRotation.m[10] = view.m[10];
+    Mat4 viewProjection = projection * viewRotation;
 
+    /* Invert rotation-only view by transpose. */
     Mat4 viewInv = Mat4::Identity();
-    viewInv.m[0] = view.m[0];
-    viewInv.m[1] = view.m[4];
-    viewInv.m[2] = view.m[8];
-    viewInv.m[4] = view.m[1];
-    viewInv.m[5] = view.m[5];
-    viewInv.m[6] = view.m[9];
-    viewInv.m[8] = view.m[2];
-    viewInv.m[9] = view.m[6];
-    viewInv.m[10] = view.m[10];
+    viewInv.m[0] = viewRotation.m[0];
+    viewInv.m[1] = viewRotation.m[4];
+    viewInv.m[2] = viewRotation.m[8];
+    viewInv.m[4] = viewRotation.m[1];
+    viewInv.m[5] = viewRotation.m[5];
+    viewInv.m[6] = viewRotation.m[9];
+    viewInv.m[8] = viewRotation.m[2];
+    viewInv.m[9] = viewRotation.m[6];
+    viewInv.m[10] = viewRotation.m[10];
 
     SkyboxPushConstants pushConstants{};
     pushConstants.ViewProjection = viewProjection;
     pushConstants.ViewInverse = viewInv;
+
+    /* Bind viewport and scissor for skybox draw. */
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(Extent.width);
+    viewport.height = static_cast<float>(Extent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    VkRect2D scissor{};
+    scissor.offset = { 0, 0 };
+    scissor.extent = Extent;
 
     vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline.GetPipeline());
     vkCmdBindDescriptorSets(
@@ -783,8 +816,15 @@ void SkyboxRenderer::Record(
         &DescriptorSet,
         0,
         nullptr);
+    vkCmdSetViewport(CommandBuffer, 0, 1, &viewport);
+    vkCmdSetScissor(CommandBuffer, 0, 1, &scissor);
 
     VkBuffer vertexBuffer = VertexBuffer.GetBuffer();
+    if (vertexBuffer == VK_NULL_HANDLE)
+    {
+        return;
+    }
+
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vertexBuffer, offsets);
 
@@ -796,7 +836,7 @@ void SkyboxRenderer::Record(
         sizeof(SkyboxPushConstants),
         &pushConstants);
 
-    vkCmdDraw(CommandBuffer, 36, 1, 0, 0);
+    vkCmdDraw(CommandBuffer, kSkyboxVertexCount, 1, 0, 0);
 }
 
 bool SkyboxRenderer::SetActiveSkybox(

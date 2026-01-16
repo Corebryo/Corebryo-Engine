@@ -26,7 +26,7 @@
 #pragma once
 
 #include "SkyboxPipeline.h"
-#include "../../Core/VulkanBuffer.h"
+#include "../Core/VulkanBuffer.h"
 #include "../../../Math/MathTypes.h"
 
 #include <vulkan/vulkan.h>
