@@ -29,7 +29,6 @@
 #include "Math/MathTypes.h"
 
 #include <cstdint>
-#include <limits>
 #include <vector>
 
 /* Manages transforms and cached model matrices. */
@@ -76,8 +75,7 @@ private:
 
 private:
     /* Invalid index sentinel for sparse mapping. */
-    static constexpr std::uint32_t kInvalidIndex =
-        std::numeric_limits<std::uint32_t>::max();
+    static constexpr std::uint32_t kInvalidIndex = 0xFFFFFFFFu;
 
     /* Packed transform components. */
     std::vector<TransformComponent> components;

@@ -35,7 +35,6 @@
 
 #include <vector>
 #include <cstdint>
-#include <limits>
 
  /* Scene owns entity lifetime and component storage. */
 class Scene
@@ -83,8 +82,7 @@ private:
 
 private:
     /* Invalid component index sentinel. */
-    static constexpr std::uint32_t kInvalidComponentIndex =
-        std::numeric_limits<std::uint32_t>::max();
+    static constexpr std::uint32_t kInvalidComponentIndex = 0xFFFFFFFFu;
 
     /* Entity state. */
     std::vector<std::uint8_t> alive;

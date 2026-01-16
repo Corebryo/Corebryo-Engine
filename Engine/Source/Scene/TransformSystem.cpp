@@ -152,6 +152,7 @@ TransformComponent& TransformSystem::AddComponent(std::uint32_t id)
     /* Ensure sparse index can reference the entity. */
     EnsureSize(id);
 
+    /* Check for an existing packed component. */
     const std::uint32_t existingIndex = indexByEntity[id];
     if (existingIndex != kInvalidIndex)
     {
@@ -188,6 +189,7 @@ void TransformSystem::RemoveComponent(std::uint32_t id)
 
     if (index != lastIndex)
     {
+        /* Move the last packed entry into the removed slot. */
         components[index] = components[lastIndex];
         entityIds[index] = entityIds[lastIndex];
         modelCache[index] = modelCache[lastIndex];
@@ -223,6 +225,7 @@ const Mat4& TransformSystem::GetModelMatrix(std::uint32_t id) const
 
     if (dirty[index])
     {
+        /* Rebuild the cached model matrix. */
         modelCache[index] = BuildModelMatrix(components[index]);
         dirty[index] = 0;
     }
@@ -253,6 +256,7 @@ void TransformSystem::EnsureSize(std::uint32_t id)
         return;
     }
 
+    /* Expand the sparse lookup table. */
     const std::size_t newSize = static_cast<std::size_t>(id) + 1;
     indexByEntity.resize(newSize, kInvalidIndex);
 }
@@ -271,6 +275,7 @@ void TransformSystem::Clear()
 /* Recompute cached model matrix. */
 Mat4 TransformSystem::BuildModelMatrix(const TransformComponent& transform) const
 {
+    /* Compose the model matrix using TRS order. */
     return
         BuildTranslation(transform.Position) *
         BuildRotationZ(transform.Rotation.z) *
@@ -279,13 +284,15 @@ Mat4 TransformSystem::BuildModelMatrix(const TransformComponent& transform) cons
         BuildScale(transform.Scale);
 }
 
-/* Validate id against storage. */
+/* Resolve packed index for an entity id. */
 std::uint32_t TransformSystem::GetIndex(std::uint32_t id) const
 {
+    /* Validate the sparse lookup range. */
     if (id >= indexByEntity.size())
     {
         return kInvalidIndex;
     }
 
+    /* Return the packed index. */
     return indexByEntity[id];
 }

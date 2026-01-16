@@ -26,7 +26,6 @@
 #pragma once
 
 #include <cstdint>
-#include <limits>
 
 /* Lightweight entity handle using an id. */
 class Entity
@@ -41,8 +40,7 @@ public:
 
 private:
     /* Invalid entity id sentinel. */
-    static constexpr std::uint32_t kInvalidId =
-        std::numeric_limits<std::uint32_t>::max();
+    static constexpr std::uint32_t kInvalidId = 0xFFFFFFFFu;
 
     /* Internal entity id. */
     std::uint32_t Id = kInvalidId;

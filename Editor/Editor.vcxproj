@@ -125,6 +125,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Engine.lib;glfw3.lib;vulkan-1.lib;user32.lib;gdi32.lib;shell32.lib;ole32.lib;advapi32.lib;winmm.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Users\denha\Downloads\GlfwLibrary\lib-vc2022;$(SolutionDir)x64\$(Configuration)\;$(VULKAN_SDK)\Lib;$(SolutionDir)Binary;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

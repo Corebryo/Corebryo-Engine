@@ -36,17 +36,17 @@
 
 void Win32WindowUtils::ApplyDarkTitlebar(void* nativeHandle)
 {
+    /* Validate the native handle. */
     if (!nativeHandle)
     {
         return;
     }
 
+    /* Convert the generic handle to HWND. */
     HWND Hwnd = static_cast<HWND>(nativeHandle);
 
-
+    /* Query the user theme preference. */
     HKEY hKey;
-
-
     DWORD value = 1;
     DWORD valueSize = sizeof(value);
 
@@ -54,20 +54,19 @@ void Win32WindowUtils::ApplyDarkTitlebar(void* nativeHandle)
     {
         if (RegQueryValueExW(hKey, VALUE_NAME, nullptr, nullptr, (LPBYTE)&value, &valueSize) == ERROR_SUCCESS)
         {
+            /* Use the queried theme value. */
         }
         RegCloseKey(hKey);
     }
 
-
+    /* Apply the immersive dark mode attribute. */
     if (value == 0)
     {
-
         BOOL darkMode = TRUE;
         DwmSetWindowAttribute(Hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkMode, sizeof(darkMode));
     }
     else
     {
-
         BOOL darkMode = FALSE;
         DwmSetWindowAttribute(Hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkMode, sizeof(darkMode));
     }
@@ -75,20 +74,22 @@ void Win32WindowUtils::ApplyDarkTitlebar(void* nativeHandle)
 
 void Win32WindowUtils::BringWindowToFront(void* nativeHandle)
 {
+    /* Validate the native handle. */
     if (!nativeHandle)
     {
         return;
     }
 
+    /* Convert the generic handle to HWND. */
     HWND Hwnd = static_cast<HWND>(nativeHandle);
 
-
+    /* Restore the window if minimized. */
     if (IsIconic(Hwnd))
     {
         ShowWindow(Hwnd, SW_RESTORE);
     }
 
-
+    /* Ensure the foreground window accepts focus. */
     DWORD foregroundThread = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
     DWORD currentThread = GetCurrentThreadId();
     
@@ -105,7 +106,7 @@ void Win32WindowUtils::BringWindowToFront(void* nativeHandle)
         SetFocus(Hwnd);
     }
 
-
+    /* Raise the window temporarily to the top. */
     SetWindowPos(
         Hwnd,
         HWND_TOPMOST,
@@ -113,6 +114,7 @@ void Win32WindowUtils::BringWindowToFront(void* nativeHandle)
         SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW
     );
     
+    /* Clear the topmost flag while keeping focus. */
     SetWindowPos(
         Hwnd,
         HWND_NOTOPMOST,
@@ -120,7 +122,7 @@ void Win32WindowUtils::BringWindowToFront(void* nativeHandle)
         SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW
     );
 
-
+    /* Finalize visibility and z-order. */
     ShowWindow(Hwnd, SW_SHOW);
     BringWindowToTop(Hwnd);
 }

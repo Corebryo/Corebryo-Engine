@@ -32,12 +32,14 @@
 
 void SetHighPerformancePowerMode()
 {
+    /* Ensure the scheme is applied once. */
     static bool applied = false;
     if (applied)
     {
         return;
     }
 
+    /* Activate the high performance power scheme. */
     applied = true;
     const GUID* scheme = &GUID_MIN_POWER_SAVINGS;
     (void)PowerSetActiveScheme(nullptr, scheme);

@@ -55,7 +55,10 @@ Entity Scene::CreateEntity()
     /* This uses a simple monotonic id allocation. */
     const std::uint32_t id = static_cast<std::uint32_t>(alive.size());
 
+    /* Ensure storage for the new entity. */
     EnsureSize(id);
+
+    /* Mark the entity alive. */
     alive[id] = true;
 
     return Entity(id);
@@ -86,6 +89,7 @@ TransformComponent* Scene::GetTransform(Entity entity)
 {
     const std::uint32_t id = entity.GetId();
 
+    /* Resolve transform component storage. */
     return transformSystem.GetComponent(id);
 }
 
@@ -259,37 +263,44 @@ void Scene::EnsureSize(std::uint32_t id)
 /* Resolve mesh index for entity id. */
 std::uint32_t Scene::GetMeshIndex(std::uint32_t id) const
 {
+    /* Validate entity id for mesh lookup. */
     if (!IsValidId(id, meshIndexByEntity.size()))
     {
         return kInvalidComponentIndex;
     }
 
+    /* Return the packed mesh index. */
     return meshIndexByEntity[id];
 }
 
 /* Resolve material index for entity id. */
 std::uint32_t Scene::GetMaterialIndex(std::uint32_t id) const
 {
+    /* Validate entity id for material lookup. */
     if (!IsValidId(id, materialIndexByEntity.size()))
     {
         return kInvalidComponentIndex;
     }
 
+    /* Return the packed material index. */
     return materialIndexByEntity[id];
 }
 
 /* Remove mesh component for entity id. */
 void Scene::RemoveMeshComponent(std::uint32_t id)
 {
+    /* Resolve packed index for removal. */
     const std::uint32_t index = GetMeshIndex(id);
     if (index == kInvalidComponentIndex)
     {
         return;
     }
 
+    /* Resolve the last packed index. */
     const std::uint32_t lastIndex =
         static_cast<std::uint32_t>(meshes.size() - 1);
 
+    /* Swap the last entry into the removed slot. */
     if (index != lastIndex)
     {
         meshes[index] = meshes[lastIndex];
@@ -306,15 +317,18 @@ void Scene::RemoveMeshComponent(std::uint32_t id)
 /* Remove material component for entity id. */
 void Scene::RemoveMaterialComponent(std::uint32_t id)
 {
+    /* Resolve packed index for removal. */
     const std::uint32_t index = GetMaterialIndex(id);
     if (index == kInvalidComponentIndex)
     {
         return;
     }
 
+    /* Resolve the last packed index. */
     const std::uint32_t lastIndex =
         static_cast<std::uint32_t>(materials.size() - 1);
 
+    /* Swap the last entry into the removed slot. */
     if (index != lastIndex)
     {
         materials[index] = materials[lastIndex];
