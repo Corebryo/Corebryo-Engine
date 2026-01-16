@@ -1430,7 +1430,7 @@ bool VulkanRenderer::CreateTextureResources(
 
     TextureData texture;
 
-    if (!LoadPngWic("Assets/Textures/Base.png", texture))
+    if (!LoadPngWic("../Assets/Textures/Base.png", texture))
     {
         std::fprintf(stderr, "VulkanRenderer::CreateTextureResources: Failed to load Base.png\n");
         return false;
