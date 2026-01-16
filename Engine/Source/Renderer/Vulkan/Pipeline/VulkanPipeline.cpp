@@ -137,8 +137,8 @@ bool VulkanPipeline::Create(
 
     std::vector<char> vertShaderCode;
     std::vector<char> fragShaderCode;
-    if (!ReadFile("Shaders/Triangle.vert.spv", vertShaderCode) ||
-        !ReadFile("Shaders/Triangle.frag.spv", fragShaderCode))
+    if (!ReadFile("../Assets/Ready/Triangle.vert.spv", vertShaderCode) ||
+        !ReadFile("../Assets/Ready/Triangle.frag.spv", fragShaderCode))
     {
         return false;
     }
@@ -382,7 +382,7 @@ bool VulkanPipeline::Create(
     }
 
     std::vector<char> shadowVertCode;
-    if (!ReadFile("Shaders/Shadow.vert.spv", shadowVertCode))
+    if (!ReadFile("../Assets/Ready/Shadow.vert.spv", shadowVertCode))
     {
         std::fprintf(stderr, "VulkanPipeline::Create: Failed to load shadow vertex shader\n");
         vkDestroyPipeline(Device, SkyPipeline, nullptr);

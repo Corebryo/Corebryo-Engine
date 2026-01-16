@@ -306,8 +306,9 @@ bool EngineRuntime::CreateVulkanResources()
 /* Destroy Vulkan and render resources. */
 void EngineRuntime::DestroyVulkanResources()
 {
-    if (RendererCreated)
+    if (DeviceCreated)
     {
+        /* Destroy renderer resources before tearing down the device. */
         Renderer.Destroy(Device.GetDevice());
         RendererCreated = false;
     }
