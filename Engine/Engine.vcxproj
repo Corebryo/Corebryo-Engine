@@ -61,6 +61,7 @@
     <ClInclude Include="Source\Scene\Components\MaterialComponent.h" />
     <ClInclude Include="Source\Scene\Components\MeshComponent.h" />
     <ClInclude Include="Source\Scene\Components\TransformComponent.h" />
+    <ClInclude Include="Source\Scene\ComponentStorage.h" />
     <ClInclude Include="Source\Scene\EngineCamera.h" />
     <ClInclude Include="Source\Scene\Entity.h" />
     <ClInclude Include="Source\Scene\Scene.h" />

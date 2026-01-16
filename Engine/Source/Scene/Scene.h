@@ -26,6 +26,7 @@
 #pragma once
 
 #include "Entity.h"
+#include "ComponentStorage.h"
 #include "Components/TransformComponent.h"
 #include "Components/MeshComponent.h"
 #include "Components/MaterialComponent.h"
@@ -34,7 +35,11 @@
 #include "Renderer/RenderItem.h"
 
 #include <vector>
+#include <cstddef>
 #include <cstdint>
+#include <memory>
+#include <type_traits>
+#include <unordered_map>
 
  /* Scene owns entity lifetime and component storage. */
 class Scene
@@ -42,6 +47,10 @@ class Scene
 public:
     Scene();
     ~Scene();
+    Scene(const Scene& other) = delete;
+    Scene& operator=(const Scene& other) = delete;
+    Scene(Scene&& other) noexcept;
+    Scene& operator=(Scene&& other) noexcept;
 
     /* Entity lifecycle. */
     Entity CreateEntity();
@@ -61,6 +70,22 @@ public:
     MeshComponent& AddMesh(Entity entity);
     MaterialComponent& AddMaterial(Entity entity);
 
+    /* Generic component accessors. */
+    template <typename T>
+    T& AddComponent(Entity entity);
+
+    template <typename T>
+    void RemoveComponent(Entity entity);
+
+    template <typename T>
+    bool HasComponent(Entity entity) const;
+
+    template <typename T>
+    T* GetComponent(Entity entity);
+
+    template <typename T>
+    const T* GetComponent(Entity entity) const;
+
     /* Build render submission list. */
     void BuildRenderList(std::vector<RenderItem>& outItems) const;
 
@@ -68,32 +93,169 @@ private:
     /* Ensure internal storage can hold entity id. */
     void EnsureSize(std::uint32_t id);
 
-    /* Resolve mesh index for entity id. */
-    std::uint32_t GetMeshIndex(std::uint32_t id) const;
-
-    /* Resolve material index for entity id. */
-    std::uint32_t GetMaterialIndex(std::uint32_t id) const;
-
-    /* Remove mesh component for entity id. */
-    void RemoveMeshComponent(std::uint32_t id);
-
-    /* Remove material component for entity id. */
-    void RemoveMaterialComponent(std::uint32_t id);
-
 private:
-    /* Invalid component index sentinel. */
-    static constexpr std::uint32_t kInvalidComponentIndex = 0xFFFFFFFFu;
+    /* Resolve a stable component type id. */
+    template <typename T>
+    static std::size_t GetComponentTypeId();
+
+    /* Find or create storage for a component type. */
+    template <typename T>
+    ComponentStorage<T>& GetOrCreateStorage();
+
+    /* Find storage for a component type. */
+    template <typename T>
+    ComponentStorage<T>* FindStorage();
+
+    /* Find storage for a component type. */
+    template <typename T>
+    const ComponentStorage<T>* FindStorage() const;
 
     /* Entity state. */
     std::vector<std::uint8_t> alive;
 
     /* Component storage. */
+    std::unordered_map<std::size_t, std::unique_ptr<IComponentStorage>> componentStores;
     TransformSystem transformSystem;
-    std::vector<MeshComponent> meshes;
-    std::vector<std::uint32_t> meshEntities;
-    std::vector<std::uint32_t> meshIndexByEntity;
-    std::vector<MaterialComponent> materials;
-    std::vector<std::uint32_t> materialEntities;
-    std::vector<std::uint32_t> materialIndexByEntity;
 
 };
+
+template <typename T>
+std::size_t Scene::GetComponentTypeId()
+{
+    /* Use a unique address as a stable type id. */
+    static const char tag = 0;
+    return reinterpret_cast<std::size_t>(&tag);
+}
+
+template <typename T>
+ComponentStorage<T>& Scene::GetOrCreateStorage()
+{
+    const std::size_t typeId = GetComponentTypeId<T>();
+    auto it = componentStores.find(typeId);
+    if (it == componentStores.end())
+    {
+        /* Create storage for the component type. */
+        auto storage = std::make_unique<ComponentStorage<T>>();
+        ComponentStorage<T>* storagePtr = storage.get();
+        componentStores.emplace(typeId, std::move(storage));
+        return *storagePtr;
+    }
+
+    /* Return the existing typed storage. */
+    return *static_cast<ComponentStorage<T>*>(it->second.get());
+}
+
+template <typename T>
+ComponentStorage<T>* Scene::FindStorage()
+{
+    const std::size_t typeId = GetComponentTypeId<T>();
+    auto it = componentStores.find(typeId);
+    if (it == componentStores.end())
+    {
+        return nullptr;
+    }
+
+    /* Return the existing typed storage. */
+    return static_cast<ComponentStorage<T>*>(it->second.get());
+}
+
+template <typename T>
+const ComponentStorage<T>* Scene::FindStorage() const
+{
+    const std::size_t typeId = GetComponentTypeId<T>();
+    auto it = componentStores.find(typeId);
+    if (it == componentStores.end())
+    {
+        return nullptr;
+    }
+
+    /* Return the existing typed storage. */
+    return static_cast<const ComponentStorage<T>*>(it->second.get());
+}
+
+template <typename T>
+T& Scene::AddComponent(Entity entity)
+{
+    const std::uint32_t id = entity.GetId();
+
+    /* Ensure entity storage exists. */
+    EnsureSize(id);
+
+    /* Resolve component storage for this type. */
+    ComponentStorage<T>& storage = GetOrCreateStorage<T>();
+    storage.EnsureSize(id);
+
+    /* Add or reuse the component. */
+    T& component = storage.Add(id);
+
+    /* Create or update transform cache when applicable. */
+    if constexpr (std::is_same_v<T, TransformComponent>)
+    {
+        transformSystem.AddTransform(id);
+        transformSystem.MarkDirty(id);
+    }
+
+    return component;
+}
+
+template <typename T>
+void Scene::RemoveComponent(Entity entity)
+{
+    const std::uint32_t id = entity.GetId();
+    ComponentStorage<T>* storage = FindStorage<T>();
+    if (!storage)
+    {
+        return;
+    }
+
+    /* Remove the component data. */
+    storage->Remove(id);
+
+    /* Remove transform cache when applicable. */
+    if constexpr (std::is_same_v<T, TransformComponent>)
+    {
+        transformSystem.RemoveTransform(id);
+    }
+}
+
+template <typename T>
+bool Scene::HasComponent(Entity entity) const
+{
+    const std::uint32_t id = entity.GetId();
+    const ComponentStorage<T>* storage = FindStorage<T>();
+    if (!storage)
+    {
+        return false;
+    }
+
+    /* Query for component presence. */
+    return storage->Has(id);
+}
+
+template <typename T>
+T* Scene::GetComponent(Entity entity)
+{
+    const std::uint32_t id = entity.GetId();
+    ComponentStorage<T>* storage = FindStorage<T>();
+    if (!storage)
+    {
+        return nullptr;
+    }
+
+    /* Return the component address. */
+    return storage->Get(id);
+}
+
+template <typename T>
+const T* Scene::GetComponent(Entity entity) const
+{
+    const std::uint32_t id = entity.GetId();
+    const ComponentStorage<T>* storage = FindStorage<T>();
+    if (!storage)
+    {
+        return nullptr;
+    }
+
+    /* Return the component address. */
+    return storage->Get(id);
+}

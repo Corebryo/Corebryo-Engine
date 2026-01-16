@@ -31,37 +31,33 @@
 #include <cstdint>
 #include <vector>
 
-/* Manages transforms and cached model matrices. */
+/* Manages cached model matrices for transforms. */
 class TransformSystem
 {
 public:
     TransformSystem();
     ~TransformSystem();
+    TransformSystem(const TransformSystem& other) = delete;
+    TransformSystem& operator=(const TransformSystem& other) = delete;
+    TransformSystem(TransformSystem&& other) noexcept = default;
+    TransformSystem& operator=(TransformSystem&& other) noexcept = default;
 
-    /* Access transform for modification. */
-    /* Caller must mark dirty after mutation. */
-    TransformComponent* GetComponent(std::uint32_t id);
+    /* Add cache entry for a transform. */
+    void AddTransform(std::uint32_t id);
 
-    /* Access transform without marking dirty. */
-    const TransformComponent* GetComponent(std::uint32_t id) const;
+    /* Remove cache entry for a transform. */
+    void RemoveTransform(std::uint32_t id);
 
-    /* Add transform for entity id. */
-    TransformComponent& AddComponent(std::uint32_t id);
-
-    /* Remove transform for entity id. */
-    void RemoveComponent(std::uint32_t id);
-
-    /* Query presence for entity id. */
-    bool HasComponent(std::uint32_t id) const;
+    /* Query cache presence for entity id. */
+    bool HasTransform(std::uint32_t id) const;
 
     /* Get cached model matrix, rebuilding when dirty. */
-    const Mat4& GetModelMatrix(std::uint32_t id) const;
+    const Mat4& GetModelMatrix(
+        std::uint32_t id,
+        const TransformComponent& transform) const;
 
     /* Explicitly mark transform dirty. */
     void MarkDirty(std::uint32_t id);
-
-    /* Ensure storage covers entity id. */
-    void EnsureSize(std::uint32_t id);
 
     /* Reset all transforms. */
     void Clear();
@@ -77,10 +73,7 @@ private:
     /* Invalid index sentinel for sparse mapping. */
     static constexpr std::uint32_t kInvalidIndex = 0xFFFFFFFFu;
 
-    /* Packed transform components. */
-    std::vector<TransformComponent> components;
-
-    /* Entity ids for packed components. */
+    /* Entity ids for cached transforms. */
     std::vector<std::uint32_t> entityIds;
 
     /* Sparse lookup from entity id to packed index. */

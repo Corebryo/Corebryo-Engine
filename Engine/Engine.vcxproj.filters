@@ -120,6 +120,9 @@
     <ClInclude Include="Source\Scene\Components\TransformComponent.h">
       <Filter>Source Files\Scene\Components</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Scene\ComponentStorage.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Scene\Entity.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
