@@ -777,17 +777,8 @@ void SkyboxRenderer::Record(
     /* Combine projection with rotation-only view. */
     Mat4 viewProjection = projection * viewRotation;
 
-    /* Invert rotation-only view by transpose. */
+    /* Use object-space directions for cubemap sampling; view rotation already aligns the cube. */
     Mat4 viewInv = Mat4::Identity();
-    viewInv.m[0] = viewRotation.m[0];
-    viewInv.m[1] = viewRotation.m[4];
-    viewInv.m[2] = viewRotation.m[8];
-    viewInv.m[4] = viewRotation.m[1];
-    viewInv.m[5] = viewRotation.m[5];
-    viewInv.m[6] = viewRotation.m[9];
-    viewInv.m[8] = viewRotation.m[2];
-    viewInv.m[9] = viewRotation.m[6];
-    viewInv.m[10] = viewRotation.m[10];
 
     SkyboxPushConstants pushConstants{};
     pushConstants.ViewProjection = viewProjection;
