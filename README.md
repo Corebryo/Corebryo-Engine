@@ -58,7 +58,7 @@ Corebryo exists for developers who want to understand how a modern renderer and 
 - Improved camera and input systems
 - Debug rendering utilities
 - Basic physics and collision (AABB broad-phase)
-- Editor and debug tooling
+- Expanded editor tooling (gizmos, docking, asset browser)
 - Scene graph / ECS direction decisions
 
 ## Repository Layout
