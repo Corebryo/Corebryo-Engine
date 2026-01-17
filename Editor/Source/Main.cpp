@@ -120,7 +120,7 @@ int main()
     GlfwWindow window;
     bool windowCreated = false;
 
-    if (!window.Create(DefaultWindowWidth, DefaultWindowHeight, "Editor"))
+    if (!window.Create(DefaultWindowWidth, DefaultWindowHeight, "Corebryo"))
     {
         std::fprintf(stderr, "Failed to create window\n");
         return 1;
