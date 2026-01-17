@@ -33,13 +33,8 @@ namespace
 {
     struct PushConstants
     {
-        float MVP[16];
-        float Model[16];
-        float BaseColor[3];
-        float Ambient;
-        float Alpha;
-        int Mode;
-        float Padding[2];
+        float BaseColorAmbient[4];
+        float AlphaModePadding[4];
     };
 
     struct ShadowPushConstants
@@ -176,12 +171,15 @@ bool VulkanPipeline::Create(
         fragShaderStageInfo
     };
 
-    VkVertexInputBindingDescription bindingDescription{};
-    bindingDescription.binding = 0;
-    bindingDescription.stride = sizeof(float) * 5;
-    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    VkVertexInputBindingDescription bindings[2]{};
+    bindings[0].binding = 0;
+    bindings[0].stride = sizeof(float) * 5;
+    bindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    bindings[1].binding = 1;
+    bindings[1].stride = sizeof(float) * 16;
+    bindings[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
 
-    VkVertexInputAttributeDescription attributeDescriptions[2]{};
+    VkVertexInputAttributeDescription attributeDescriptions[6]{};
     attributeDescriptions[0].location = 0;
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -192,12 +190,50 @@ bool VulkanPipeline::Create(
     attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
     attributeDescriptions[1].offset = sizeof(float) * 3;
 
+    attributeDescriptions[2].location = 2;
+    attributeDescriptions[2].binding = 1;
+    attributeDescriptions[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    attributeDescriptions[2].offset = 0;
+
+    attributeDescriptions[3].location = 3;
+    attributeDescriptions[3].binding = 1;
+    attributeDescriptions[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    attributeDescriptions[3].offset = sizeof(float) * 4;
+
+    attributeDescriptions[4].location = 4;
+    attributeDescriptions[4].binding = 1;
+    attributeDescriptions[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    attributeDescriptions[4].offset = sizeof(float) * 8;
+
+    attributeDescriptions[5].location = 5;
+    attributeDescriptions[5].binding = 1;
+    attributeDescriptions[5].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    attributeDescriptions[5].offset = sizeof(float) * 12;
+
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-    vertexInputInfo.vertexAttributeDescriptionCount = 2;
+    vertexInputInfo.vertexBindingDescriptionCount = 2;
+    vertexInputInfo.pVertexBindingDescriptions = bindings;
+    vertexInputInfo.vertexAttributeDescriptionCount = 6;
     vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions;
+
+    VkVertexInputBindingDescription shadowBinding{};
+    shadowBinding.binding = 0;
+    shadowBinding.stride = sizeof(float) * 5;
+    shadowBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    VkVertexInputAttributeDescription shadowAttribute{};
+    shadowAttribute.location = 0;
+    shadowAttribute.binding = 0;
+    shadowAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+    shadowAttribute.offset = 0;
+
+    VkPipelineVertexInputStateCreateInfo shadowVertexInputInfo{};
+    shadowVertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    shadowVertexInputInfo.vertexBindingDescriptionCount = 1;
+    shadowVertexInputInfo.pVertexBindingDescriptions = &shadowBinding;
+    shadowVertexInputInfo.vertexAttributeDescriptionCount = 1;
+    shadowVertexInputInfo.pVertexAttributeDescriptions = &shadowAttribute;
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -441,7 +477,7 @@ bool VulkanPipeline::Create(
     shadowInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     shadowInfo.stageCount = 1;
     shadowInfo.pStages = shadowStages;
-    shadowInfo.pVertexInputState = &vertexInputInfo;
+    shadowInfo.pVertexInputState = &shadowVertexInputInfo;
     shadowInfo.pInputAssemblyState = &inputAssembly;
     shadowInfo.pViewportState = &viewportState;
     shadowInfo.pRasterizationState = &rasterizer;

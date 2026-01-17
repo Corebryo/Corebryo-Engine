@@ -95,6 +95,7 @@ public:
     struct UniformBufferObject
     {
         Mat4 LightViewProj;
+        Mat4 ViewProj;
     };
 
 private:
@@ -171,6 +172,7 @@ private:
 
     /* Uniform updates. */
     void UpdateUniformBuffer(VkDevice Device);
+    bool EnsureInstanceBuffer(VkDevice Device, VkPhysicalDevice PhysicalDevice, std::size_t InstanceCount);
 
     /* Main render pass stage recording. */
     void RecordSkyboxStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent);
@@ -182,7 +184,8 @@ private:
     void RecordTransparentStage(
         VkCommandBuffer CommandBuffer,
         VkExtent2D Extent,
-        const std::vector<SortedRenderItem>& Items);
+        const std::vector<SortedRenderItem>& Items,
+        std::uint32_t BaseInstance);
 
 private:
     /* Swapchain state. */
@@ -219,6 +222,9 @@ private:
     /* Uniform buffer. */
     VkBuffer UniformBuffer = VK_NULL_HANDLE;
     VkDeviceMemory UniformMemory = VK_NULL_HANDLE;
+    VkBuffer InstanceBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory InstanceMemory = VK_NULL_HANDLE;
+    std::size_t InstanceCapacity = 0;
 
     /* Depth buffer. */
     VkImage DepthImage = VK_NULL_HANDLE;

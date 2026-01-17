@@ -41,13 +41,8 @@ namespace
     /* Push constants shared between pipelines. */
     struct PushConstants
     {
-        Mat4 MVP;
-        Mat4 Model;
-        Vec3 BaseColor;
-        float Ambient;
-        float Alpha;
-        int Mode;
-        float Padding[2];
+        float BaseColorAmbient[4];
+        float AlphaModePadding[4];
     };
 
     float ComputeDepthSq(const RenderItem& item, const Camera* camera)
@@ -623,6 +618,8 @@ void VulkanRenderer::RecordOpaqueStage(
     const std::vector<SortedRenderItem>& Items,
     const std::vector<OpaqueBatch>& Batches)
 {
+    (void)Items;
+    (void)Extent;
     vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline->GetWorldHandle());
     vkCmdBindDescriptorSets(
         CommandBuffer,
@@ -633,23 +630,42 @@ void VulkanRenderer::RecordOpaqueStage(
         &DescriptorSet,
         0,
         nullptr);
-    float aspect = 1.0f;
-    if (Extent.height > 0)
-    {
-        aspect = static_cast<float>(Extent.width) /
-            static_cast<float>(Extent.height);
-    }
-
     Mesh* boundMesh = nullptr;
     for (const OpaqueBatch& batch : Batches)
     {
+        PushConstants worldPush{};
+        worldPush.BaseColorAmbient[0] = 1.0f;
+        worldPush.BaseColorAmbient[1] = 1.0f;
+        worldPush.BaseColorAmbient[2] = 1.0f;
+        worldPush.BaseColorAmbient[3] = 0.0f;
+        worldPush.AlphaModePadding[0] = 1.0f;
+        worldPush.AlphaModePadding[1] = 1.0f;
+        worldPush.AlphaModePadding[2] = 0.0f;
+        worldPush.AlphaModePadding[3] = 0.0f;
+        if (batch.MaterialPtr)
+        {
+            worldPush.BaseColorAmbient[0] = batch.MaterialPtr->BaseColor.x;
+            worldPush.BaseColorAmbient[1] = batch.MaterialPtr->BaseColor.y;
+            worldPush.BaseColorAmbient[2] = batch.MaterialPtr->BaseColor.z;
+            worldPush.BaseColorAmbient[3] = batch.MaterialPtr->Ambient;
+            worldPush.AlphaModePadding[0] = batch.MaterialPtr->Alpha;
+        }
+        vkCmdPushConstants(
+            CommandBuffer,
+            Pipeline->GetLayout(),
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            0,
+            sizeof(PushConstants),
+            &worldPush);
+
         if (batch.MeshPtr && batch.MeshPtr != boundMesh)
         {
             VkBuffer vertexBuffer = batch.MeshPtr->VertexBuffer.GetBuffer();
             if (vertexBuffer != VK_NULL_HANDLE)
             {
-                VkDeviceSize offsets[] = { 0 };
-                vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vertexBuffer, offsets);
+                VkBuffer buffers[] = { vertexBuffer, InstanceBuffer };
+                VkDeviceSize offsets[] = { 0, 0 };
+                vkCmdBindVertexBuffers(CommandBuffer, 0, 2, buffers, offsets);
             }
 
             if (batch.MeshPtr->HasIndex && batch.MeshPtr->IndexCount > 0)
@@ -664,42 +680,24 @@ void VulkanRenderer::RecordOpaqueStage(
             boundMesh = batch.MeshPtr;
         }
 
-        const std::size_t endIndex = batch.StartIndex + batch.Count;
-        for (std::size_t index = batch.StartIndex; index < endIndex; ++index)
+        if (batch.MeshPtr && batch.MeshPtr->HasIndex && batch.MeshPtr->IndexCount > 0)
         {
-            const RenderItem& item = *Items[index].Item;
-
-            PushConstants worldPush{};
-            worldPush.MVP = Camera ? Camera->GetMVPMatrix(aspect, item.Model) : Mat4::Identity();
-            worldPush.Model = item.Model;
-            if (item.MaterialPtr)
-            {
-                worldPush.BaseColor = item.MaterialPtr->BaseColor;
-                worldPush.Ambient = item.MaterialPtr->Ambient;
-                worldPush.Alpha = item.MaterialPtr->Alpha;
-            }
-            else
-            {
-                worldPush.BaseColor = Vec3(1.0f, 1.0f, 1.0f);
-                worldPush.Ambient = 0.0f;
-                worldPush.Alpha = 1.0f;
-            }
-            worldPush.Mode = 1;
-            vkCmdPushConstants(
+            vkCmdDrawIndexed(
                 CommandBuffer,
-                Pipeline->GetLayout(),
-                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                batch.MeshPtr->IndexCount,
+                static_cast<std::uint32_t>(batch.Count),
                 0,
-                sizeof(PushConstants),
-                &worldPush);
-            if (item.MeshPtr->HasIndex && item.MeshPtr->IndexCount > 0)
-            {
-                vkCmdDrawIndexed(CommandBuffer, item.MeshPtr->IndexCount, 1, 0, 0, 0);
-            }
-            else
-            {
-                vkCmdDraw(CommandBuffer, item.MeshPtr->VertexCount, 1, 0, 0);
-            }
+                0,
+                static_cast<std::uint32_t>(batch.StartIndex));
+        }
+        else if (batch.MeshPtr)
+        {
+            vkCmdDraw(
+                CommandBuffer,
+                batch.MeshPtr->VertexCount,
+                static_cast<std::uint32_t>(batch.Count),
+                0,
+                static_cast<std::uint32_t>(batch.StartIndex));
         }
     }
 }
@@ -707,8 +705,10 @@ void VulkanRenderer::RecordOpaqueStage(
 void VulkanRenderer::RecordTransparentStage(
     VkCommandBuffer CommandBuffer,
     VkExtent2D Extent,
-    const std::vector<SortedRenderItem>& Items)
+    const std::vector<SortedRenderItem>& Items,
+    std::uint32_t BaseInstance)
 {
+    (void)Extent;
     vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline->GetWorldHandle());
     vkCmdBindDescriptorSets(
         CommandBuffer,
@@ -719,40 +719,32 @@ void VulkanRenderer::RecordTransparentStage(
         &DescriptorSet,
         0,
         nullptr);
-    float aspect = 1.0f;
-    if (Extent.height > 0)
+    for (std::size_t index = 0; index < Items.size(); ++index)
     {
-        aspect = static_cast<float>(Extent.width) /
-            static_cast<float>(Extent.height);
-    }
-
-    for (const SortedRenderItem& entry : Items)
-    {
-        const RenderItem& item = *entry.Item;
+        const RenderItem& item = *Items[index].Item;
 
         VkBuffer vertexBuffer = item.MeshPtr->VertexBuffer.GetBuffer();
-        if (vertexBuffer != VK_NULL_HANDLE)
-        {
-            VkDeviceSize offsets[] = { 0 };
-            vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vertexBuffer, offsets);
-        }
+        VkBuffer buffers[] = { vertexBuffer, InstanceBuffer };
+        VkDeviceSize offsets[] = { 0, 0 };
+        vkCmdBindVertexBuffers(CommandBuffer, 0, 2, buffers, offsets);
 
         PushConstants worldPush{};
-        worldPush.MVP = Camera ? Camera->GetMVPMatrix(aspect, item.Model) : Mat4::Identity();
-        worldPush.Model = item.Model;
+        worldPush.BaseColorAmbient[0] = 1.0f;
+        worldPush.BaseColorAmbient[1] = 1.0f;
+        worldPush.BaseColorAmbient[2] = 1.0f;
+        worldPush.BaseColorAmbient[3] = 0.0f;
+        worldPush.AlphaModePadding[0] = 1.0f;
+        worldPush.AlphaModePadding[1] = 1.0f;
+        worldPush.AlphaModePadding[2] = 0.0f;
+        worldPush.AlphaModePadding[3] = 0.0f;
         if (item.MaterialPtr)
         {
-            worldPush.BaseColor = item.MaterialPtr->BaseColor;
-            worldPush.Ambient = item.MaterialPtr->Ambient;
-            worldPush.Alpha = item.MaterialPtr->Alpha;
+            worldPush.BaseColorAmbient[0] = item.MaterialPtr->BaseColor.x;
+            worldPush.BaseColorAmbient[1] = item.MaterialPtr->BaseColor.y;
+            worldPush.BaseColorAmbient[2] = item.MaterialPtr->BaseColor.z;
+            worldPush.BaseColorAmbient[3] = item.MaterialPtr->Ambient;
+            worldPush.AlphaModePadding[0] = item.MaterialPtr->Alpha;
         }
-        else
-        {
-            worldPush.BaseColor = Vec3(1.0f, 1.0f, 1.0f);
-            worldPush.Ambient = 0.0f;
-            worldPush.Alpha = 1.0f;
-        }
-        worldPush.Mode = 1;
         vkCmdPushConstants(
             CommandBuffer,
             Pipeline->GetLayout(),
@@ -766,12 +758,23 @@ void VulkanRenderer::RecordTransparentStage(
             if (indexBuffer != VK_NULL_HANDLE)
             {
                 vkCmdBindIndexBuffer(CommandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-                vkCmdDrawIndexed(CommandBuffer, item.MeshPtr->IndexCount, 1, 0, 0, 0);
+                vkCmdDrawIndexed(
+                    CommandBuffer,
+                    item.MeshPtr->IndexCount,
+                    1,
+                    0,
+                    0,
+                    BaseInstance + static_cast<std::uint32_t>(index));
             }
         }
         else
         {
-            vkCmdDraw(CommandBuffer, item.MeshPtr->VertexCount, 1, 0, 0);
+            vkCmdDraw(
+                CommandBuffer,
+                item.MeshPtr->VertexCount,
+                1,
+                0,
+                BaseInstance + static_cast<std::uint32_t>(index));
         }
     }
 }
@@ -980,6 +983,7 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
     std::vector<SortedRenderItem> opaqueItems;
     std::vector<SortedRenderItem> transparentItems;
     std::vector<OpaqueBatch> opaqueBatches;
+    std::vector<Mat4> instanceModels;
     opaqueItems.reserve(RenderItems.size());
     transparentItems.reserve(RenderItems.size());
 
@@ -1054,10 +1058,39 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
         {
             return a.DepthSq > b.DepthSq;
         });
+
+    instanceModels.reserve(opaqueItems.size() + transparentItems.size());
+    for (const SortedRenderItem& entry : opaqueItems)
+    {
+        instanceModels.push_back(entry.Item->Model);
+    }
+    const std::uint32_t transparentBase =
+        static_cast<std::uint32_t>(instanceModels.size());
+    for (const SortedRenderItem& entry : transparentItems)
+    {
+        instanceModels.push_back(entry.Item->Model);
+    }
+
+    if (!EnsureInstanceBuffer(Device, PhysicalDeviceHandle, instanceModels.size()))
+    {
+        return;
+    }
+
+    if (!instanceModels.empty())
+    {
+        void* instanceData = nullptr;
+        if (vkMapMemory(Device, InstanceMemory, 0,
+            sizeof(Mat4) * instanceModels.size(), 0, &instanceData) == VK_SUCCESS)
+        {
+            std::memcpy(instanceData, instanceModels.data(),
+                sizeof(Mat4) * instanceModels.size());
+            vkUnmapMemory(Device, InstanceMemory);
+        }
+    }
     /* Main render pass stages: skybox -> opaque -> transparent. */
     RecordSkyboxStage(commandBuffer, SwapchainExtent);
     RecordOpaqueStage(commandBuffer, SwapchainExtent, opaqueItems, opaqueBatches);
-    RecordTransparentStage(commandBuffer, SwapchainExtent, transparentItems);
+    RecordTransparentStage(commandBuffer, SwapchainExtent, transparentItems, transparentBase);
     vkCmdEndRenderPass(commandBuffer);
 
     vkEndCommandBuffer(commandBuffer);
@@ -1167,6 +1200,19 @@ void VulkanRenderer::Destroy(VkDevice Device)
             vkFreeMemory(activeDevice, UniformMemory, nullptr);
             UniformMemory = VK_NULL_HANDLE;
         }
+
+        if (InstanceBuffer != VK_NULL_HANDLE)
+        {
+            vkDestroyBuffer(activeDevice, InstanceBuffer, nullptr);
+            InstanceBuffer = VK_NULL_HANDLE;
+        }
+
+        if (InstanceMemory != VK_NULL_HANDLE)
+        {
+            vkFreeMemory(activeDevice, InstanceMemory, nullptr);
+            InstanceMemory = VK_NULL_HANDLE;
+        }
+        InstanceCapacity = 0;
     }
 
     if (activeDevice != VK_NULL_HANDLE)
@@ -1502,6 +1548,51 @@ bool VulkanRenderer::CreateDescriptorPool(VkDevice Device)
         return false;
     }
 
+    return true;
+}
+
+bool VulkanRenderer::EnsureInstanceBuffer(
+    VkDevice Device,
+    VkPhysicalDevice PhysicalDevice,
+    std::size_t InstanceCount)
+{
+    if (InstanceCount == 0)
+    {
+        return true;
+    }
+
+    if (InstanceCount <= InstanceCapacity && InstanceBuffer != VK_NULL_HANDLE)
+    {
+        return true;
+    }
+
+    if (InstanceBuffer != VK_NULL_HANDLE)
+    {
+        vkDestroyBuffer(Device, InstanceBuffer, nullptr);
+        InstanceBuffer = VK_NULL_HANDLE;
+    }
+
+    if (InstanceMemory != VK_NULL_HANDLE)
+    {
+        vkFreeMemory(Device, InstanceMemory, nullptr);
+        InstanceMemory = VK_NULL_HANDLE;
+    }
+
+    VkDeviceSize size = sizeof(Mat4) * InstanceCount;
+    if (!CreateBuffer(
+        PhysicalDevice,
+        Device,
+        size,
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        InstanceBuffer,
+        InstanceMemory))
+    {
+        InstanceCapacity = 0;
+        return false;
+    }
+
+    InstanceCapacity = InstanceCount;
     return true;
 }
 
@@ -2167,6 +2258,7 @@ void VulkanRenderer::UpdateUniformBuffer(VkDevice Device)
         return;
     }
 
+    const float kPi = 3.1415926535f;
     Vec3 lightDir(0.0f, 0.0f, -1.0f);
     Vec3 target(0.0f, 0.0f, -5.0f);
     Vec3 lightPos = target - lightDir * 10.0f;
@@ -2176,6 +2268,17 @@ void VulkanRenderer::UpdateUniformBuffer(VkDevice Device)
 
     UniformBufferObject ubo{};
     ubo.LightViewProj = lightProj * lightView;
+    float aspect = 1.0f;
+    if (SwapchainExtent.height > 0)
+    {
+        aspect = static_cast<float>(SwapchainExtent.width) /
+            static_cast<float>(SwapchainExtent.height);
+    }
+    float fovRadians = Camera->GetZoom() * kPi / 180.0f;
+    Mat4 projection = Mat4::Perspective(fovRadians, aspect, 0.1f, 100.0f);
+    Vec3 eye = Camera->GetPosition();
+    Mat4 view = Mat4::LookAt(eye, eye + Camera->GetFront(), Camera->GetUp());
+    ubo.ViewProj = projection * view;
     LightViewProj = ubo.LightViewProj;
 
     void* data = nullptr;

@@ -24,6 +24,7 @@ Expect breaking changes.
 - Main render stages (skybox, opaque, transparent) executed within a single render pass
 - Render list grouping by material alpha with stage-appropriate sorting (opaque front-to-back, transparent back-to-front)
 - Opaque batching by mesh/material to reduce redundant binds while preserving draw order
+- GPU instancing for opaque batches using per-instance transforms to cut draw calls
 
 ## Planned Features
 
