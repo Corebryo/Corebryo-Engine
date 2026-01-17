@@ -47,6 +47,7 @@ Corebryo exists for developers who want to understand how a modern renderer and 
 - GPU instancing for opaque batches using per-instance transforms to cut draw calls
 - Nuklear performance overlay with FPS, frame time, draw calls, triangle count, and vertex count
 - Editor entities panel to list and select scene entities for inspection and editing
+- Inspector and selection info panels for viewing and editing Transform data plus read-only component/bounds details
 
 ## Planned Features
 
