@@ -1099,6 +1099,64 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
         instanceModels.push_back(entry.Item->Model);
     }
 
+    std::uint32_t drawCalls = 0;
+    std::uint64_t triangleCount = 0;
+    std::uint64_t vertexCount = 0;
+    if (Skybox.IsReady() && Camera && SwapchainExtent.width > 0 && SwapchainExtent.height > 0)
+    {
+        drawCalls += 1;
+        vertexCount += 36;
+        triangleCount += 12;
+    }
+    for (const OpaqueBatch& batch : opaqueBatches)
+    {
+        if (!batch.MeshPtr)
+        {
+            continue;
+        }
+
+        drawCalls += 1;
+        if (batch.MeshPtr->HasIndex && batch.MeshPtr->IndexCount > 0)
+        {
+            const std::uint64_t indicesPerInstance = batch.MeshPtr->IndexCount;
+            vertexCount += indicesPerInstance * batch.Count;
+            triangleCount += (indicesPerInstance / 3) * batch.Count;
+        }
+        else
+        {
+            const std::uint64_t verticesPerInstance = batch.MeshPtr->VertexCount;
+            vertexCount += verticesPerInstance * batch.Count;
+            triangleCount += (verticesPerInstance / 3) * batch.Count;
+        }
+    }
+    for (const SortedRenderItem& entry : transparentItems)
+    {
+        const RenderItem& item = *entry.Item;
+        if (!item.MeshPtr)
+        {
+            continue;
+        }
+
+        drawCalls += 1;
+        if (item.MeshPtr->HasIndex && item.MeshPtr->IndexCount > 0)
+        {
+            const std::uint64_t indicesPerInstance = item.MeshPtr->IndexCount;
+            vertexCount += indicesPerInstance;
+            triangleCount += indicesPerInstance / 3;
+        }
+        else
+        {
+            const std::uint64_t verticesPerInstance = item.MeshPtr->VertexCount;
+            vertexCount += verticesPerInstance;
+            triangleCount += verticesPerInstance / 3;
+        }
+    }
+
+    if (Overlay.IsInitialized())
+    {
+        Overlay.SetRenderStats(drawCalls, triangleCount, vertexCount);
+    }
+
     if (!EnsureInstanceBuffer(Device, PhysicalDeviceHandle, instanceModels.size()))
     {
         return;

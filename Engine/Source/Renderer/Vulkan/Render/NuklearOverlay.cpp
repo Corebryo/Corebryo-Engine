@@ -58,6 +58,9 @@ NuklearOverlay::NuklearOverlay()
     , Initialized(false)
     , LastDeltaTime(0.0f)
     , LastFps(0.0f)
+    , LastDrawCalls(0)
+    , LastTriangleCount(0)
+    , LastVertexCount(0)
 {
 }
 
@@ -132,7 +135,7 @@ void NuklearOverlay::BeginFrame(float deltaTime)
 
     nk_glfw3_new_frame();
 
-    const struct nk_rect bounds = nk_rect(12.0f, 12.0f, 180.0f, 56.0f);
+    const struct nk_rect bounds = nk_rect(12.0f, 12.0f, 220.0f, 110.0f);
     const nk_flags flags = NK_WINDOW_NO_INPUT | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_BORDER;
 
     if (nk_begin(Context, "Performance", bounds, flags))
@@ -140,9 +143,22 @@ void NuklearOverlay::BeginFrame(float deltaTime)
         nk_layout_row_dynamic(Context, 18.0f, 1);
         nk_labelf(Context, NK_TEXT_LEFT, "FPS: %.1f", LastFps);
         nk_labelf(Context, NK_TEXT_LEFT, "Frame: %.2f ms", LastDeltaTime * 1000.0f);
+        nk_labelf(Context, NK_TEXT_LEFT, "Draw Calls: %u", LastDrawCalls);
+        nk_labelf(Context, NK_TEXT_LEFT, "Triangles: %llu", static_cast<unsigned long long>(LastTriangleCount));
+        nk_labelf(Context, NK_TEXT_LEFT, "Vertices: %llu", static_cast<unsigned long long>(LastVertexCount));
     }
 
     nk_end(Context);
+}
+
+void NuklearOverlay::SetRenderStats(
+    std::uint32_t drawCalls,
+    std::uint64_t triangleCount,
+    std::uint64_t vertexCount)
+{
+    LastDrawCalls = drawCalls;
+    LastTriangleCount = triangleCount;
+    LastVertexCount = vertexCount;
 }
 
 VkSemaphore NuklearOverlay::Render(

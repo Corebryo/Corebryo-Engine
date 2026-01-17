@@ -53,6 +53,11 @@ public:
 
     void BeginFrame(float deltaTime);
 
+    void SetRenderStats(
+        std::uint32_t drawCalls,
+        std::uint64_t triangleCount,
+        std::uint64_t vertexCount);
+
     VkSemaphore Render(
         VkQueue graphicsQueue,
         std::uint32_t imageIndex,
@@ -80,4 +85,7 @@ private:
     bool Initialized;
     float LastDeltaTime;
     float LastFps;
+    std::uint32_t LastDrawCalls;
+    std::uint64_t LastTriangleCount;
+    std::uint64_t LastVertexCount;
 };
