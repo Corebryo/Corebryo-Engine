@@ -196,6 +196,8 @@ int main()
         const double nowTime = glfwGetTime();
         const float deltaTime = static_cast<float>(nowTime - lastTime);
         lastTime = nowTime;
+        const float maxDeltaTime = 0.05f;
+        const float clampedDeltaTime = deltaTime > maxDeltaTime ? maxDeltaTime : deltaTime;
 
         /* Handle window resize by recreating swapchain dependent resources. */
         if (window.WasResized())
@@ -213,7 +215,7 @@ int main()
         }
 
         /* Update and render a single engine frame. */
-        engine.Tick(deltaTime);
+        engine.Tick(clampedDeltaTime);
     }
 
     /* Cleanup is performed by the scope guard. */
