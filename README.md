@@ -7,6 +7,11 @@ Corebryo is a low level C++ game engine project with a clean, explicit architect
 This project is under active development and is not production ready.
 Expect breaking changes.
 
+## Supported Platforms
+
+- Windows 10/11, x64
+- Visual Studio 2022 toolchain
+
 ## Goals
 
 - Keep the engine code understandable and explicit.
@@ -53,9 +58,13 @@ Corebryo exists for developers who want to understand how a modern renderer and 
 
 ## Repository Layout
 
-- `Assets/` Engine assets and runtime data
-- `Shaders/` Shader source files
-- `Source/` Engine source code
+- `Engine/` Core runtime and renderer
+- `Engine/Source/` Engine C++ source
+- `Editor/` Editor application
+- `Editor/Source/Main.cpp` Editor entry point
+- `Engine/Assets/` (or `Assets/`) Engine assets and runtime data
+- `Engine/Shaders/` Shader source files
+- `Assets/Ready/` Compiled shader outputs (if present)
 - `Binary/` Local build output (ignored by git)
 - `Temp/` Local temporary files (ignored by git)
 
@@ -79,6 +88,28 @@ The solution contains:
 - **Engine** – Corebryo engine library
 - **Editor** – Development editor built on top of the engine
 - **Nuklear** – External library for the UI-layer of the editor
+
+### Run
+1. Set **Editor** as the startup project
+2. Run (F5) to launch the editor and validate runtime behavior
+
+## Dependencies
+
+- Vulkan SDK installed and configured
+- GLFW linked locally (DLL present for runtime)
+- Windows SDK that matches your Visual Studio installation
+
+## Who This Is For
+
+- Developers who want to learn how a renderer and engine systems fit together
+- Teams that want a lightweight base they can fully own and extend
+- Graphics programmers experimenting with Vulkan and render pipelines
+
+## What This Is Not
+
+- A turn-key, production-ready engine
+- A full content-creation suite like Unity or Unreal
+- A drop-in replacement for large toolchains
 
 ## Contributing
 
