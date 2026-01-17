@@ -41,7 +41,7 @@ namespace
     constexpr std::uint32_t kDefaultWindowHeight = 720;
 
     /* Simple scene configuration. */
-    constexpr bool kEnableCube = true;
+    constexpr bool kEnableCube = false;
     constexpr float kCubeForwardOffset = 6.0f;
     constexpr float kCameraCollisionRadius = 0.25f;
 
