@@ -34,6 +34,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
 namespace
 {
@@ -48,6 +49,21 @@ namespace
         int Mode;
         float Padding[2];
     };
+
+    float ComputeDepthSq(const RenderItem& item, const Camera* camera)
+    {
+        if (!camera)
+        {
+            return 0.0f;
+        }
+
+        const Vec3 itemPosition(
+            item.Model.m[12],
+            item.Model.m[13],
+            item.Model.m[14]);
+        const Vec3 offset = itemPosition - camera->GetPosition();
+        return Vec3::Dot(offset, offset);
+    }
 
     /* Simple vertex layout. */
     struct Vertex
@@ -601,7 +617,10 @@ void VulkanRenderer::RecordSkyboxStage(VkCommandBuffer CommandBuffer, VkExtent2D
     Skybox.Record(CommandBuffer, Extent, Camera);
 }
 
-void VulkanRenderer::RecordOpaqueStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent)
+void VulkanRenderer::RecordOpaqueStage(
+    VkCommandBuffer CommandBuffer,
+    VkExtent2D Extent,
+    const std::vector<SortedRenderItem>& Items)
 {
     vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline->GetWorldHandle());
     vkCmdBindDescriptorSets(
@@ -620,12 +639,9 @@ void VulkanRenderer::RecordOpaqueStage(VkCommandBuffer CommandBuffer, VkExtent2D
             static_cast<float>(Extent.height);
     }
 
-    for (const RenderItem& item : RenderItems)
+    for (const SortedRenderItem& entry : Items)
     {
-        if (!item.MeshPtr || item.MeshPtr->VertexCount == 0)
-        {
-            continue;
-        }
+        const RenderItem& item = *entry.Item;
 
         VkBuffer vertexBuffer = item.MeshPtr->VertexBuffer.GetBuffer();
         if (vertexBuffer != VK_NULL_HANDLE)
@@ -673,11 +689,76 @@ void VulkanRenderer::RecordOpaqueStage(VkCommandBuffer CommandBuffer, VkExtent2D
     }
 }
 
-void VulkanRenderer::RecordTransparentStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent)
+void VulkanRenderer::RecordTransparentStage(
+    VkCommandBuffer CommandBuffer,
+    VkExtent2D Extent,
+    const std::vector<SortedRenderItem>& Items)
 {
-    /* Transparent stage reserved for future passes. */
-    (void)CommandBuffer;
-    (void)Extent;
+    vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline->GetWorldHandle());
+    vkCmdBindDescriptorSets(
+        CommandBuffer,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        Pipeline->GetLayout(),
+        0,
+        1,
+        &DescriptorSet,
+        0,
+        nullptr);
+    float aspect = 1.0f;
+    if (Extent.height > 0)
+    {
+        aspect = static_cast<float>(Extent.width) /
+            static_cast<float>(Extent.height);
+    }
+
+    for (const SortedRenderItem& entry : Items)
+    {
+        const RenderItem& item = *entry.Item;
+
+        VkBuffer vertexBuffer = item.MeshPtr->VertexBuffer.GetBuffer();
+        if (vertexBuffer != VK_NULL_HANDLE)
+        {
+            VkDeviceSize offsets[] = { 0 };
+            vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vertexBuffer, offsets);
+        }
+
+        PushConstants worldPush{};
+        worldPush.MVP = Camera ? Camera->GetMVPMatrix(aspect, item.Model) : Mat4::Identity();
+        worldPush.Model = item.Model;
+        if (item.MaterialPtr)
+        {
+            worldPush.BaseColor = item.MaterialPtr->BaseColor;
+            worldPush.Ambient = item.MaterialPtr->Ambient;
+            worldPush.Alpha = item.MaterialPtr->Alpha;
+        }
+        else
+        {
+            worldPush.BaseColor = Vec3(1.0f, 1.0f, 1.0f);
+            worldPush.Ambient = 0.0f;
+            worldPush.Alpha = 1.0f;
+        }
+        worldPush.Mode = 1;
+        vkCmdPushConstants(
+            CommandBuffer,
+            Pipeline->GetLayout(),
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            0,
+            sizeof(PushConstants),
+            &worldPush);
+        if (item.MeshPtr->HasIndex && item.MeshPtr->IndexCount > 0)
+        {
+            VkBuffer indexBuffer = item.MeshPtr->IndexBuffer.GetBuffer();
+            if (indexBuffer != VK_NULL_HANDLE)
+            {
+                vkCmdBindIndexBuffer(CommandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                vkCmdDrawIndexed(CommandBuffer, item.MeshPtr->IndexCount, 1, 0, 0, 0);
+            }
+        }
+        else
+        {
+            vkCmdDraw(CommandBuffer, item.MeshPtr->VertexCount, 1, 0, 0);
+        }
+    }
 }
 
 void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
@@ -881,10 +962,59 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
 
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    std::vector<SortedRenderItem> opaqueItems;
+    std::vector<SortedRenderItem> transparentItems;
+    opaqueItems.reserve(RenderItems.size());
+    transparentItems.reserve(RenderItems.size());
+
+    for (const RenderItem& item : RenderItems)
+    {
+        if (!item.MeshPtr || item.MeshPtr->VertexCount == 0)
+        {
+            continue;
+        }
+
+        const float depthSq = ComputeDepthSq(item, Camera);
+        const float alpha = item.MaterialPtr ? item.MaterialPtr->Alpha : 1.0f;
+        const SortedRenderItem entry{ &item, depthSq };
+
+        if (alpha < 1.0f)
+        {
+            transparentItems.push_back(entry);
+        }
+        else
+        {
+            opaqueItems.push_back(entry);
+        }
+    }
+
+    std::sort(
+        opaqueItems.begin(),
+        opaqueItems.end(),
+        [](const SortedRenderItem& a, const SortedRenderItem& b)
+        {
+            if (a.DepthSq != b.DepthSq)
+            {
+                return a.DepthSq < b.DepthSq;
+            }
+            if (a.Item->MaterialPtr != b.Item->MaterialPtr)
+            {
+                return a.Item->MaterialPtr < b.Item->MaterialPtr;
+            }
+            return a.Item->MeshPtr < b.Item->MeshPtr;
+        });
+
+    std::sort(
+        transparentItems.begin(),
+        transparentItems.end(),
+        [](const SortedRenderItem& a, const SortedRenderItem& b)
+        {
+            return a.DepthSq > b.DepthSq;
+        });
     /* Main render pass stages: skybox -> opaque -> transparent. */
     RecordSkyboxStage(commandBuffer, SwapchainExtent);
-    RecordOpaqueStage(commandBuffer, SwapchainExtent);
-    RecordTransparentStage(commandBuffer, SwapchainExtent);
+    RecordOpaqueStage(commandBuffer, SwapchainExtent, opaqueItems);
+    RecordTransparentStage(commandBuffer, SwapchainExtent, transparentItems);
     vkCmdEndRenderPass(commandBuffer);
 
     vkEndCommandBuffer(commandBuffer);

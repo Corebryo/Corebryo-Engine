@@ -98,6 +98,12 @@ public:
     };
 
 private:
+    struct SortedRenderItem
+    {
+        const RenderItem* Item = nullptr;
+        float DepthSq = 0.0f;
+    };
+
     /* Framebuffer creation. */
     bool CreateFramebuffers(
         VkDevice Device,
@@ -160,8 +166,14 @@ private:
 
     /* Main render pass stage recording. */
     void RecordSkyboxStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent);
-    void RecordOpaqueStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent);
-    void RecordTransparentStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent);
+    void RecordOpaqueStage(
+        VkCommandBuffer CommandBuffer,
+        VkExtent2D Extent,
+        const std::vector<SortedRenderItem>& Items);
+    void RecordTransparentStage(
+        VkCommandBuffer CommandBuffer,
+        VkExtent2D Extent,
+        const std::vector<SortedRenderItem>& Items);
 
 private:
     /* Swapchain state. */
