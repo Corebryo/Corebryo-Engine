@@ -22,6 +22,7 @@ Expect breaking changes.
 - Win32 windowing layer (plus GLFW integration)
 - Vulkan renderer foundation
 - Main render stages (skybox, opaque, transparent) executed within a single render pass
+- Render list grouping by material alpha with stage-appropriate sorting (opaque front-to-back, transparent back-to-front)
 
 ## Planned Features
 
