@@ -49,6 +49,7 @@ Corebryo exists for developers who want to understand how a modern renderer and 
 - Editor entities panel to list and select scene entities for inspection and editing
 - Inspector and selection info panels for viewing and editing Transform data plus read-only component/bounds details
 - Clamped editor delta time to avoid large simulation jumps after window interaction
+- Editor/engine initialization uses config structs (EditorConfig, EngineConfig) for clear startup defaults like window size and vsync
 
 ## Planned Features
 
