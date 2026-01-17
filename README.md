@@ -45,6 +45,7 @@ Corebryo exists for developers who want to understand how a modern renderer and 
 - Render list grouping by material alpha with stage-appropriate sorting (opaque front-to-back, transparent back-to-front)
 - Opaque batching by mesh/material to reduce redundant binds while preserving draw order
 - GPU instancing for opaque batches using per-instance transforms to cut draw calls
+- Nuklear performance overlay with FPS, frame time, draw calls, triangle count, and vertex count
 
 ## Planned Features
 
