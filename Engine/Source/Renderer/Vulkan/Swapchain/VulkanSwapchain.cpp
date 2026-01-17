@@ -48,7 +48,8 @@ bool VulkanSwapchain::Create(
     VkSurfaceKHR Surface,
     uint32_t GraphicsQueueFamily,
     uint32_t Width,
-    uint32_t Height)
+    uint32_t Height,
+    bool EnableVsync)
 {
     (void)GraphicsQueueFamily;
 
@@ -100,13 +101,19 @@ bool VulkanSwapchain::Create(
     }
 
     /* Select present mode. */
-    VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    VkPresentModeKHR presentMode = EnableVsync
+        ? VK_PRESENT_MODE_FIFO_KHR
+        : VK_PRESENT_MODE_IMMEDIATE_KHR;
     for (VkPresentModeKHR mode : presentModes)
     {
-        if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
+        if (!EnableVsync && mode == VK_PRESENT_MODE_MAILBOX_KHR)
         {
             presentMode = mode;
             break;
+        }
+        if (!EnableVsync && mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+        {
+            presentMode = mode;
         }
     }
 
@@ -217,12 +224,13 @@ bool VulkanSwapchain::Recreate(
     VkSurfaceKHR Surface,
     uint32_t GraphicsQueueFamily,
     uint32_t Width,
-    uint32_t Height)
+    uint32_t Height,
+    bool EnableVsync)
 {
     Destroy(Device);
     return Create(
         PhysicalDevice, Device, Surface,
-        GraphicsQueueFamily, Width, Height);
+        GraphicsQueueFamily, Width, Height, EnableVsync);
 }
 
 /* Destroy swapchain and image views. */

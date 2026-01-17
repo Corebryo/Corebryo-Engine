@@ -25,6 +25,7 @@
 
 #pragma once
 
+#include "Engine/EngineConfig.h"
 #include "Math/MathVector.h"
 #include "Renderer/RenderItem.h"
 #include "Renderer/Vulkan/Core/VulkanDevice.h"
@@ -51,7 +52,7 @@ public:
     ~EngineRuntime();
 
     /* Initialize the engine using a host-provided window. */
-    bool Initialize(GLFWwindow* windowHandle);
+    bool Initialize(GLFWwindow* windowHandle, const EngineConfig& config);
 
     /* Update and render a single frame. */
     void Tick(float deltaTime);
@@ -79,6 +80,7 @@ private:
     void BuildFirstFrame();
 
     GLFWwindow* WindowHandle;
+    EngineConfig Config;
 
     VulkanInstance Instance;
     VulkanDevice Device;

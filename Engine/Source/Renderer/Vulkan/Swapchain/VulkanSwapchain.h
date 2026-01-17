@@ -46,7 +46,8 @@ public:
         VkSurfaceKHR Surface,
         uint32_t GraphicsQueueFamily,
         uint32_t Width,
-        uint32_t Height);
+        uint32_t Height,
+        bool EnableVsync);
 
     /* Recreate swapchain for resized surface. */
     bool Recreate(
@@ -55,7 +56,8 @@ public:
         VkSurfaceKHR Surface,
         uint32_t GraphicsQueueFamily,
         uint32_t Width,
-        uint32_t Height);
+        uint32_t Height,
+        bool EnableVsync);
 
     /* Release swapchain and image views. */
     void Destroy(VkDevice Device);

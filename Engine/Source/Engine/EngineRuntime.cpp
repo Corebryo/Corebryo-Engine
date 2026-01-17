@@ -36,10 +36,6 @@
 
 namespace
 {
-    /* Default window size for swapchain creation. */
-    constexpr std::uint32_t kDefaultWindowWidth = 1280;
-    constexpr std::uint32_t kDefaultWindowHeight = 720;
-
     /* Simple scene configuration. */
     constexpr bool kEnableCube = false;
     constexpr float kCubeForwardOffset = 6.0f;
@@ -77,6 +73,7 @@ namespace
 /* Initialize runtime defaults. */
 EngineRuntime::EngineRuntime()
     : WindowHandle(nullptr)
+    , Config()
     , InstanceCreated(false)
     , DeviceCreated(false)
     , SurfaceCreated(false)
@@ -95,7 +92,7 @@ EngineRuntime::~EngineRuntime()
 }
 
 /* Initialize the engine using a host-provided window. */
-bool EngineRuntime::Initialize(GLFWwindow* windowHandle)
+bool EngineRuntime::Initialize(GLFWwindow* windowHandle, const EngineConfig& config)
 {
     Shutdown();
 
@@ -106,6 +103,8 @@ bool EngineRuntime::Initialize(GLFWwindow* windowHandle)
     }
 
     WindowHandle = windowHandle;
+    Config = config;
+    g_CurrentEngineState = Config.InitialState;
 
     if (!CreateVulkanResources())
     {
@@ -284,7 +283,8 @@ void EngineRuntime::OnResize(std::int32_t width, std::int32_t height)
         Surface.GetHandle(),
         Device.GetGraphicsQueueFamily(),
         static_cast<std::uint32_t>(width),
-        static_cast<std::uint32_t>(height));
+        static_cast<std::uint32_t>(height),
+        Config.EnableVsync);
 
     Renderer.Recreate(
         Device.GetDevice(),
@@ -312,8 +312,8 @@ bool EngineRuntime::CreateVulkanResources()
 
     if (windowWidth <= 0 || windowHeight <= 0)
     {
-        windowWidth = static_cast<std::int32_t>(kDefaultWindowWidth);
-        windowHeight = static_cast<std::int32_t>(kDefaultWindowHeight);
+        windowWidth = static_cast<std::int32_t>(Config.FallbackWidth);
+        windowHeight = static_cast<std::int32_t>(Config.FallbackHeight);
     }
 
     if (!Instance.Create("Editor", WindowHandle))
@@ -346,7 +346,8 @@ bool EngineRuntime::CreateVulkanResources()
         Surface.GetHandle(),
         Device.GetGraphicsQueueFamily(),
         static_cast<std::uint32_t>(windowWidth),
-        static_cast<std::uint32_t>(windowHeight)))
+        static_cast<std::uint32_t>(windowHeight),
+        Config.EnableVsync))
     {
         std::fprintf(stderr, "EngineRuntime::CreateVulkanResources: failed to create swapchain\n");
         return false;

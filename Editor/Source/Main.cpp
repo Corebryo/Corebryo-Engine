@@ -25,6 +25,7 @@
 
 #include <Windows.h>
 
+#include "EditorConfig.h"
 #include "Platform/Input/GlfwInput.h"
 #include "Platform/Window/GlfwWindow.h"
 #include "Platform/Windows/Win32PowerPerformance.h"
@@ -108,19 +109,24 @@ private:
 
 int main()
 {
-    /* Basic editor configuration for the bootstrap app. */
-    constexpr std::uint32_t DefaultWindowWidth = 1280;
-    constexpr std::uint32_t DefaultWindowHeight = 720;
     std::printf("Starting editor initialization...\n");
 
-    SetHighPerformancePowerMode();
+    const EditorConfig editorConfig{};
+    EngineConfig engineConfig{};
+    engineConfig.FallbackWidth = editorConfig.WindowWidth;
+    engineConfig.FallbackHeight = editorConfig.WindowHeight;
+
+    if (editorConfig.UseHighPerformancePowerMode)
+    {
+        SetHighPerformancePowerMode();
+    }
     SetWorkingDirectoryToEngineRoot();
 
     /* Create the native window first because Vulkan needs a surface provider. */
     GlfwWindow window;
     bool windowCreated = false;
 
-    if (!window.Create(DefaultWindowWidth, DefaultWindowHeight, "Corebryo"))
+    if (!window.Create(editorConfig.WindowWidth, editorConfig.WindowHeight, editorConfig.WindowTitle))
     {
         std::fprintf(stderr, "Failed to create window\n");
         return 1;
@@ -132,13 +138,16 @@ int main()
     GlfwInput::Attach(window.GetHandle());
 
     /* Bring window to front early, but keep it hidden until the first frame is ready. */
-    window.BringToFront();
+    if (editorConfig.HideWindowUntilReady)
+    {
+        window.BringToFront();
+    }
 
     /* Initialize the engine runtime with the editor window. */
     EngineRuntime engine;
     bool engineCreated = false;
 
-    if (!engine.Initialize(window.GetHandle()))
+    if (!engine.Initialize(window.GetHandle(), engineConfig))
     {
         std::fprintf(stderr, "Failed to initialize engine runtime\n");
 
@@ -166,7 +175,10 @@ int main()
             }
         });
 
-    glfwShowWindow(window.GetHandle());
+    if (editorConfig.HideWindowUntilReady)
+    {
+        glfwShowWindow(window.GetHandle());
+    }
 
     /* Time tracking based on GLFW monotonic timer. */
     double lastTime = glfwGetTime();
@@ -196,8 +208,10 @@ int main()
         const double nowTime = glfwGetTime();
         const float deltaTime = static_cast<float>(nowTime - lastTime);
         lastTime = nowTime;
-        const float maxDeltaTime = 0.05f;
-        const float clampedDeltaTime = deltaTime > maxDeltaTime ? maxDeltaTime : deltaTime;
+        const float clampedDeltaTime =
+            deltaTime > editorConfig.MaxDeltaTime
+            ? editorConfig.MaxDeltaTime
+            : deltaTime;
 
         /* Handle window resize by recreating swapchain dependent resources. */
         if (window.WasResized())
