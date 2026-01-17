@@ -50,6 +50,9 @@
 
 #include "NuklearOverlay.h"
 
+#include <GLFW/glfw3.h>
+
+#include <algorithm>
 #include <cstdio>
 
 NuklearOverlay::NuklearOverlay()
@@ -140,7 +143,24 @@ void NuklearOverlay::BeginFrame(float deltaTime)
 
     nk_glfw3_new_frame();
 
-    const struct nk_rect bounds = nk_rect(12.0f, 12.0f, 220.0f, 110.0f);
+    float windowWidth = 0.0f;
+    float windowHeight = 0.0f;
+    if (WindowHandle)
+    {
+        int width = 0;
+        int height = 0;
+        glfwGetWindowSize(WindowHandle, &width, &height);
+        windowWidth = static_cast<float>(width);
+        windowHeight = static_cast<float>(height);
+    }
+
+    const float margin = 12.0f;
+    const float leftPanelWidth = 220.0f;
+    const float inspectorWidth = 260.0f;
+    const float inspectorHeight = 320.0f;
+    const float rightX = std::max(margin, windowWidth - inspectorWidth - margin);
+
+    const struct nk_rect bounds = nk_rect(margin, margin, leftPanelWidth, 110.0f);
     const nk_flags flags = NK_WINDOW_NO_INPUT | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_BORDER;
 
     if (nk_begin(Context, "Performance", bounds, flags))
@@ -155,7 +175,7 @@ void NuklearOverlay::BeginFrame(float deltaTime)
 
     nk_end(Context);
 
-    const struct nk_rect entityBounds = nk_rect(12.0f, 130.0f, 220.0f, 260.0f);
+    const struct nk_rect entityBounds = nk_rect(margin, 130.0f, leftPanelWidth, 260.0f);
     const nk_flags entityFlags = NK_WINDOW_BORDER | NK_WINDOW_TITLE;
 
     if (nk_begin(Context, "Entities", entityBounds, entityFlags))
@@ -190,7 +210,7 @@ void NuklearOverlay::BeginFrame(float deltaTime)
 
     nk_end(Context);
 
-    const struct nk_rect inspectorBounds = nk_rect(244.0f, 12.0f, 260.0f, 320.0f);
+    const struct nk_rect inspectorBounds = nk_rect(rightX, margin, inspectorWidth, inspectorHeight);
     const nk_flags inspectorFlags = NK_WINDOW_BORDER | NK_WINDOW_TITLE;
 
     if (nk_begin(Context, "Inspector", inspectorBounds, inspectorFlags))
