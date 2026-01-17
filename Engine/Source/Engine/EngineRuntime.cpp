@@ -188,10 +188,49 @@ void EngineRuntime::Tick(float deltaTime)
         }
     }
 
+    InspectorData inspector{};
+    inspector.HasSelection = SelectedEntity.IsValid();
+    inspector.SelectedEntity = SelectedEntity;
+    if (inspector.HasSelection)
+    {
+        const TransformComponent* transform = WorldScene.GetTransform(SelectedEntity);
+        inspector.HasTransform = transform != nullptr;
+        if (transform)
+        {
+            inspector.Position[0] = transform->Position.x;
+            inspector.Position[1] = transform->Position.y;
+            inspector.Position[2] = transform->Position.z;
+            inspector.Rotation[0] = transform->Rotation.x;
+            inspector.Rotation[1] = transform->Rotation.y;
+            inspector.Rotation[2] = transform->Rotation.z;
+            inspector.Scale[0] = transform->Scale.x;
+            inspector.Scale[1] = transform->Scale.y;
+            inspector.Scale[2] = transform->Scale.z;
+        }
+
+        inspector.HasMesh = WorldScene.GetMesh(SelectedEntity) != nullptr;
+        inspector.HasMaterial = WorldScene.GetMaterial(SelectedEntity) != nullptr;
+    }
+
+    InspectorState = inspector;
     Renderer.SetEditorEntities(SceneEntities);
     Renderer.SetEditorSelection(SelectedEntity);
+    Renderer.SetInspectorData(InspectorState);
     Renderer.DrawFrame(Device.GetDevice(), Device.GetGraphicsQueue());
     SelectedEntity = Renderer.GetEditorSelection();
+
+    TransformEdit edit{};
+    if (Renderer.ConsumeTransformEdit(edit))
+    {
+        TransformComponent* transform = WorldScene.GetTransform(edit.Target);
+        if (transform)
+        {
+            transform->Position = Vec3(edit.Position[0], edit.Position[1], edit.Position[2]);
+            transform->Rotation = Vec3(edit.Rotation[0], edit.Rotation[1], edit.Rotation[2]);
+            transform->Scale = Vec3(edit.Scale[0], edit.Scale[1], edit.Scale[2]);
+            WorldScene.MarkTransformDirty(edit.Target);
+        }
+    }
 }
 
 /* Shutdown all runtime systems. */
@@ -209,6 +248,7 @@ void EngineRuntime::Shutdown()
     SceneEntities.clear();
     WorldScene = Scene();
     SelectedEntity = Entity();
+    InspectorState = InspectorData();
     Initialized = false;
 }
 
@@ -380,6 +420,7 @@ void EngineRuntime::CreateScene()
     RenderItems.reserve(1024);
     SceneEntities.clear();
     SelectedEntity = Entity();
+    InspectorState = InspectorData();
 
     CubePosition =
         Renderer.GetCameraPosition() + Vec3(0.0f, 0.0f, -kCubeForwardOffset);
@@ -407,5 +448,6 @@ void EngineRuntime::BuildFirstFrame()
     WorldScene.GetEntities(SceneEntities);
     Renderer.SetEditorEntities(SceneEntities);
     Renderer.SetEditorSelection(SelectedEntity);
+    Renderer.SetInspectorData(InspectorState);
     Renderer.DrawFrame(Device.GetDevice(), Device.GetGraphicsQueue());
 }

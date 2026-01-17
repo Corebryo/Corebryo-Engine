@@ -34,6 +34,27 @@
 struct GLFWwindow;
 struct nk_context;
 
+struct InspectorData
+{
+    bool HasSelection = false;
+    Entity SelectedEntity{};
+    bool HasTransform = false;
+    float Position[3] = { 0.0f, 0.0f, 0.0f };
+    float Rotation[3] = { 0.0f, 0.0f, 0.0f };
+    float Scale[3] = { 1.0f, 1.0f, 1.0f };
+    bool HasMesh = false;
+    bool HasMaterial = false;
+};
+
+struct TransformEdit
+{
+    bool HasEdit = false;
+    Entity Target{};
+    float Position[3] = { 0.0f, 0.0f, 0.0f };
+    float Rotation[3] = { 0.0f, 0.0f, 0.0f };
+    float Scale[3] = { 1.0f, 1.0f, 1.0f };
+};
+
 /* Lightweight Nuklear overlay for editor performance stats. */
 class NuklearOverlay
 {
@@ -58,6 +79,9 @@ public:
     void SetSceneEntities(const std::vector<Entity>& entities);
     void SetSelectedEntity(Entity entity);
     Entity GetSelectedEntity() const;
+
+    void SetInspectorData(const InspectorData& data);
+    bool ConsumeTransformEdit(TransformEdit& outEdit);
 
     void SetRenderStats(
         std::uint32_t drawCalls,
@@ -96,4 +120,6 @@ private:
     std::uint64_t LastVertexCount;
     std::vector<Entity> SceneEntities;
     Entity SelectedEntity;
+    InspectorData Inspector;
+    TransformEdit PendingTransformEdit;
 };

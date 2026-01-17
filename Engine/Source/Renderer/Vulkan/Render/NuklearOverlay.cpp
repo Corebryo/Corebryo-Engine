@@ -64,6 +64,8 @@ NuklearOverlay::NuklearOverlay()
     , LastTriangleCount(0)
     , LastVertexCount(0)
     , SelectedEntity()
+    , Inspector()
+    , PendingTransformEdit()
 {
 }
 
@@ -187,6 +189,82 @@ void NuklearOverlay::BeginFrame(float deltaTime)
     }
 
     nk_end(Context);
+
+    const struct nk_rect inspectorBounds = nk_rect(244.0f, 12.0f, 260.0f, 320.0f);
+    const nk_flags inspectorFlags = NK_WINDOW_BORDER | NK_WINDOW_TITLE;
+
+    if (nk_begin(Context, "Inspector", inspectorBounds, inspectorFlags))
+    {
+        nk_layout_row_dynamic(Context, 18.0f, 1);
+
+        if (!Inspector.HasSelection)
+        {
+            nk_label(Context, "No entity selected", NK_TEXT_LEFT);
+        }
+        else
+        {
+            nk_labelf(Context, NK_TEXT_LEFT, "Entity %u", Inspector.SelectedEntity.GetId());
+
+            nk_layout_row_dynamic(Context, 18.0f, 1);
+            nk_label(Context, "Transform", NK_TEXT_LEFT);
+
+            if (Inspector.HasTransform)
+            {
+                float position[3] = { Inspector.Position[0], Inspector.Position[1], Inspector.Position[2] };
+                float rotation[3] = { Inspector.Rotation[0], Inspector.Rotation[1], Inspector.Rotation[2] };
+                float scale[3] = { Inspector.Scale[0], Inspector.Scale[1], Inspector.Scale[2] };
+
+                nk_layout_row_dynamic(Context, 18.0f, 1);
+                nk_property_float(Context, "Pos X", -1000.0f, &position[0], 1000.0f, 0.1f, 0.01f);
+                nk_property_float(Context, "Pos Y", -1000.0f, &position[1], 1000.0f, 0.1f, 0.01f);
+                nk_property_float(Context, "Pos Z", -1000.0f, &position[2], 1000.0f, 0.1f, 0.01f);
+                nk_property_float(Context, "Rot X", -360.0f, &rotation[0], 360.0f, 0.5f, 0.05f);
+                nk_property_float(Context, "Rot Y", -360.0f, &rotation[1], 360.0f, 0.5f, 0.05f);
+                nk_property_float(Context, "Rot Z", -360.0f, &rotation[2], 360.0f, 0.5f, 0.05f);
+                nk_property_float(Context, "Scale X", 0.001f, &scale[0], 1000.0f, 0.1f, 0.01f);
+                nk_property_float(Context, "Scale Y", 0.001f, &scale[1], 1000.0f, 0.1f, 0.01f);
+                nk_property_float(Context, "Scale Z", 0.001f, &scale[2], 1000.0f, 0.1f, 0.01f);
+
+                bool changed = false;
+                for (int i = 0; i < 3; ++i)
+                {
+                    if (position[i] != Inspector.Position[i] ||
+                        rotation[i] != Inspector.Rotation[i] ||
+                        scale[i] != Inspector.Scale[i])
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+
+                if (changed)
+                {
+                    PendingTransformEdit.HasEdit = true;
+                    PendingTransformEdit.Target = Inspector.SelectedEntity;
+                    for (int i = 0; i < 3; ++i)
+                    {
+                        PendingTransformEdit.Position[i] = position[i];
+                        PendingTransformEdit.Rotation[i] = rotation[i];
+                        PendingTransformEdit.Scale[i] = scale[i];
+                        Inspector.Position[i] = position[i];
+                        Inspector.Rotation[i] = rotation[i];
+                        Inspector.Scale[i] = scale[i];
+                    }
+                }
+            }
+            else
+            {
+                nk_label(Context, "No TransformComponent", NK_TEXT_LEFT);
+            }
+
+            nk_layout_row_dynamic(Context, 18.0f, 1);
+            nk_label(Context, "Components", NK_TEXT_LEFT);
+            nk_labelf(Context, NK_TEXT_LEFT, "MeshComponent: %s", Inspector.HasMesh ? "Yes" : "No");
+            nk_labelf(Context, NK_TEXT_LEFT, "MaterialComponent: %s", Inspector.HasMaterial ? "Yes" : "No");
+        }
+    }
+
+    nk_end(Context);
 }
 
 void NuklearOverlay::SetSceneEntities(const std::vector<Entity>& entities)
@@ -202,6 +280,29 @@ void NuklearOverlay::SetSelectedEntity(Entity entity)
 Entity NuklearOverlay::GetSelectedEntity() const
 {
     return SelectedEntity;
+}
+
+void NuklearOverlay::SetInspectorData(const InspectorData& data)
+{
+    if (Inspector.HasSelection != data.HasSelection ||
+        Inspector.SelectedEntity.GetId() != data.SelectedEntity.GetId())
+    {
+        PendingTransformEdit.HasEdit = false;
+    }
+
+    Inspector = data;
+}
+
+bool NuklearOverlay::ConsumeTransformEdit(TransformEdit& outEdit)
+{
+    if (!PendingTransformEdit.HasEdit)
+    {
+        return false;
+    }
+
+    outEdit = PendingTransformEdit;
+    PendingTransformEdit.HasEdit = false;
+    return true;
 }
 
 void NuklearOverlay::SetRenderStats(

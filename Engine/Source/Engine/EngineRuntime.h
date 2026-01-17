@@ -91,6 +91,7 @@ private:
     std::vector<RenderItem> RenderItems;
     std::vector<Entity> SceneEntities;
     Entity SelectedEntity;
+    InspectorData InspectorState;
 
     Vec3 CubePosition;
 

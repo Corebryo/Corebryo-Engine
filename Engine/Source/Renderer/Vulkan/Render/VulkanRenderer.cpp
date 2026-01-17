@@ -649,6 +649,21 @@ Entity VulkanRenderer::GetEditorSelection() const
     return EditorSelectedEntity;
 }
 
+void VulkanRenderer::SetInspectorData(const InspectorData& Data)
+{
+    InspectorState = Data;
+}
+
+bool VulkanRenderer::ConsumeTransformEdit(TransformEdit& OutEdit)
+{
+    if (!Overlay.IsInitialized())
+    {
+        return false;
+    }
+
+    return Overlay.ConsumeTransformEdit(OutEdit);
+}
+
 void VulkanRenderer::RecordSkyboxStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent)
 {
     /* Render skybox before scene geometry. */
@@ -1219,6 +1234,7 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
     {
         Overlay.SetSceneEntities(EditorEntities);
         Overlay.SetSelectedEntity(EditorSelectedEntity);
+        Overlay.SetInspectorData(InspectorState);
         Overlay.BeginFrame(OverlayDeltaTime);
         EditorSelectedEntity = Overlay.GetSelectedEntity();
         presentSemaphore = Overlay.Render(GraphicsQueue, imageIndex, RenderFinished);

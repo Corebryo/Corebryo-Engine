@@ -79,6 +79,12 @@ public:
     /* Query selected editor entity. */
     Entity GetEditorSelection() const;
 
+    /* Update inspector data for the editor overlay. */
+    void SetInspectorData(const InspectorData& Data);
+
+    /* Pull pending transform edits from the editor overlay. */
+    bool ConsumeTransformEdit(TransformEdit& OutEdit);
+
     /* Render a single frame. */
     void DrawFrame(VkDevice Device, VkQueue GraphicsQueue);
 
@@ -295,4 +301,5 @@ private:
     /* Editor selection data. */
     std::vector<Entity> EditorEntities;
     Entity EditorSelectedEntity;
+    InspectorData InspectorState;
 };
