@@ -104,6 +104,14 @@ private:
         float DepthSq = 0.0f;
     };
 
+    struct OpaqueBatch
+    {
+        std::size_t StartIndex = 0;
+        std::size_t Count = 0;
+        Mesh* MeshPtr = nullptr;
+        Material* MaterialPtr = nullptr;
+    };
+
     /* Framebuffer creation. */
     bool CreateFramebuffers(
         VkDevice Device,
@@ -169,7 +177,8 @@ private:
     void RecordOpaqueStage(
         VkCommandBuffer CommandBuffer,
         VkExtent2D Extent,
-        const std::vector<SortedRenderItem>& Items);
+        const std::vector<SortedRenderItem>& Items,
+        const std::vector<OpaqueBatch>& Batches);
     void RecordTransparentStage(
         VkCommandBuffer CommandBuffer,
         VkExtent2D Extent,

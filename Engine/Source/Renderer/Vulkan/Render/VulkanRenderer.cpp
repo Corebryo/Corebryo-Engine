@@ -620,7 +620,8 @@ void VulkanRenderer::RecordSkyboxStage(VkCommandBuffer CommandBuffer, VkExtent2D
 void VulkanRenderer::RecordOpaqueStage(
     VkCommandBuffer CommandBuffer,
     VkExtent2D Extent,
-    const std::vector<SortedRenderItem>& Items)
+    const std::vector<SortedRenderItem>& Items,
+    const std::vector<OpaqueBatch>& Batches)
 {
     vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline->GetWorldHandle());
     vkCmdBindDescriptorSets(
@@ -639,52 +640,66 @@ void VulkanRenderer::RecordOpaqueStage(
             static_cast<float>(Extent.height);
     }
 
-    for (const SortedRenderItem& entry : Items)
+    Mesh* boundMesh = nullptr;
+    for (const OpaqueBatch& batch : Batches)
     {
-        const RenderItem& item = *entry.Item;
-
-        VkBuffer vertexBuffer = item.MeshPtr->VertexBuffer.GetBuffer();
-        if (vertexBuffer != VK_NULL_HANDLE)
+        if (batch.MeshPtr && batch.MeshPtr != boundMesh)
         {
-            VkDeviceSize offsets[] = { 0 };
-            vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vertexBuffer, offsets);
-        }
-
-        PushConstants worldPush{};
-        worldPush.MVP = Camera ? Camera->GetMVPMatrix(aspect, item.Model) : Mat4::Identity();
-        worldPush.Model = item.Model;
-        if (item.MaterialPtr)
-        {
-            worldPush.BaseColor = item.MaterialPtr->BaseColor;
-            worldPush.Ambient = item.MaterialPtr->Ambient;
-            worldPush.Alpha = item.MaterialPtr->Alpha;
-        }
-        else
-        {
-            worldPush.BaseColor = Vec3(1.0f, 1.0f, 1.0f);
-            worldPush.Ambient = 0.0f;
-            worldPush.Alpha = 1.0f;
-        }
-        worldPush.Mode = 1;
-        vkCmdPushConstants(
-            CommandBuffer,
-            Pipeline->GetLayout(),
-            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            0,
-            sizeof(PushConstants),
-            &worldPush);
-        if (item.MeshPtr->HasIndex && item.MeshPtr->IndexCount > 0)
-        {
-            VkBuffer indexBuffer = item.MeshPtr->IndexBuffer.GetBuffer();
-            if (indexBuffer != VK_NULL_HANDLE)
+            VkBuffer vertexBuffer = batch.MeshPtr->VertexBuffer.GetBuffer();
+            if (vertexBuffer != VK_NULL_HANDLE)
             {
-                vkCmdBindIndexBuffer(CommandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                VkDeviceSize offsets[] = { 0 };
+                vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vertexBuffer, offsets);
+            }
+
+            if (batch.MeshPtr->HasIndex && batch.MeshPtr->IndexCount > 0)
+            {
+                VkBuffer indexBuffer = batch.MeshPtr->IndexBuffer.GetBuffer();
+                if (indexBuffer != VK_NULL_HANDLE)
+                {
+                    vkCmdBindIndexBuffer(CommandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                }
+            }
+
+            boundMesh = batch.MeshPtr;
+        }
+
+        const std::size_t endIndex = batch.StartIndex + batch.Count;
+        for (std::size_t index = batch.StartIndex; index < endIndex; ++index)
+        {
+            const RenderItem& item = *Items[index].Item;
+
+            PushConstants worldPush{};
+            worldPush.MVP = Camera ? Camera->GetMVPMatrix(aspect, item.Model) : Mat4::Identity();
+            worldPush.Model = item.Model;
+            if (item.MaterialPtr)
+            {
+                worldPush.BaseColor = item.MaterialPtr->BaseColor;
+                worldPush.Ambient = item.MaterialPtr->Ambient;
+                worldPush.Alpha = item.MaterialPtr->Alpha;
+            }
+            else
+            {
+                worldPush.BaseColor = Vec3(1.0f, 1.0f, 1.0f);
+                worldPush.Ambient = 0.0f;
+                worldPush.Alpha = 1.0f;
+            }
+            worldPush.Mode = 1;
+            vkCmdPushConstants(
+                CommandBuffer,
+                Pipeline->GetLayout(),
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                0,
+                sizeof(PushConstants),
+                &worldPush);
+            if (item.MeshPtr->HasIndex && item.MeshPtr->IndexCount > 0)
+            {
                 vkCmdDrawIndexed(CommandBuffer, item.MeshPtr->IndexCount, 1, 0, 0, 0);
             }
-        }
-        else
-        {
-            vkCmdDraw(CommandBuffer, item.MeshPtr->VertexCount, 1, 0, 0);
+            else
+            {
+                vkCmdDraw(CommandBuffer, item.MeshPtr->VertexCount, 1, 0, 0);
+            }
         }
     }
 }
@@ -964,6 +979,7 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     std::vector<SortedRenderItem> opaqueItems;
     std::vector<SortedRenderItem> transparentItems;
+    std::vector<OpaqueBatch> opaqueBatches;
     opaqueItems.reserve(RenderItems.size());
     transparentItems.reserve(RenderItems.size());
 
@@ -1004,6 +1020,33 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
             return a.Item->MeshPtr < b.Item->MeshPtr;
         });
 
+    if (!opaqueItems.empty())
+    {
+        OpaqueBatch currentBatch{};
+        currentBatch.StartIndex = 0;
+        currentBatch.Count = 0;
+        currentBatch.MeshPtr = opaqueItems[0].Item->MeshPtr;
+        currentBatch.MaterialPtr = opaqueItems[0].Item->MaterialPtr;
+
+        for (std::size_t index = 0; index < opaqueItems.size(); ++index)
+        {
+            const RenderItem* item = opaqueItems[index].Item;
+            if (item->MeshPtr != currentBatch.MeshPtr ||
+                item->MaterialPtr != currentBatch.MaterialPtr)
+            {
+                opaqueBatches.push_back(currentBatch);
+                currentBatch.StartIndex = index;
+                currentBatch.Count = 0;
+                currentBatch.MeshPtr = item->MeshPtr;
+                currentBatch.MaterialPtr = item->MaterialPtr;
+            }
+
+            ++currentBatch.Count;
+        }
+
+        opaqueBatches.push_back(currentBatch);
+    }
+
     std::sort(
         transparentItems.begin(),
         transparentItems.end(),
@@ -1013,7 +1056,7 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
         });
     /* Main render pass stages: skybox -> opaque -> transparent. */
     RecordSkyboxStage(commandBuffer, SwapchainExtent);
-    RecordOpaqueStage(commandBuffer, SwapchainExtent, opaqueItems);
+    RecordOpaqueStage(commandBuffer, SwapchainExtent, opaqueItems, opaqueBatches);
     RecordTransparentStage(commandBuffer, SwapchainExtent, transparentItems);
     vkCmdEndRenderPass(commandBuffer);
 
