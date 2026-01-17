@@ -89,6 +89,8 @@ private:
 
     Scene WorldScene;
     std::vector<RenderItem> RenderItems;
+    std::vector<Entity> SceneEntities;
+    Entity SelectedEntity;
 
     Vec3 CubePosition;
 

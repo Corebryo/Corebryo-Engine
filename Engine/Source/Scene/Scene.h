@@ -89,6 +89,9 @@ public:
     /* Build render submission list. */
     void BuildRenderList(std::vector<RenderItem>& outItems) const;
 
+    /* Enumerate living entities. */
+    void GetEntities(std::vector<Entity>& outEntities) const;
+
 private:
     /* Ensure internal storage can hold entity id. */
     void EnsureSize(std::uint32_t id);

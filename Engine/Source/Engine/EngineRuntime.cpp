@@ -168,7 +168,30 @@ void EngineRuntime::Tick(float deltaTime)
     /* Build and submit render items for this frame. */
     WorldScene.BuildRenderList(RenderItems);
     Renderer.SetRenderItems(RenderItems);
+    WorldScene.GetEntities(SceneEntities);
+
+    if (SelectedEntity.IsValid())
+    {
+        bool selectionValid = false;
+        for (const Entity& entity : SceneEntities)
+        {
+            if (entity.GetId() == SelectedEntity.GetId())
+            {
+                selectionValid = true;
+                break;
+            }
+        }
+
+        if (!selectionValid)
+        {
+            SelectedEntity = Entity();
+        }
+    }
+
+    Renderer.SetEditorEntities(SceneEntities);
+    Renderer.SetEditorSelection(SelectedEntity);
     Renderer.DrawFrame(Device.GetDevice(), Device.GetGraphicsQueue());
+    SelectedEntity = Renderer.GetEditorSelection();
 }
 
 /* Shutdown all runtime systems. */
@@ -183,7 +206,9 @@ void EngineRuntime::Shutdown()
 
     WindowHandle = nullptr;
     RenderItems.clear();
+    SceneEntities.clear();
     WorldScene = Scene();
+    SelectedEntity = Entity();
     Initialized = false;
 }
 
@@ -353,6 +378,8 @@ void EngineRuntime::CreateScene()
     WorldScene = Scene();
     RenderItems.clear();
     RenderItems.reserve(1024);
+    SceneEntities.clear();
+    SelectedEntity = Entity();
 
     CubePosition =
         Renderer.GetCameraPosition() + Vec3(0.0f, 0.0f, -kCubeForwardOffset);
@@ -377,5 +404,8 @@ void EngineRuntime::BuildFirstFrame()
 {
     WorldScene.BuildRenderList(RenderItems);
     Renderer.SetRenderItems(RenderItems);
+    WorldScene.GetEntities(SceneEntities);
+    Renderer.SetEditorEntities(SceneEntities);
+    Renderer.SetEditorSelection(SelectedEntity);
     Renderer.DrawFrame(Device.GetDevice(), Device.GetGraphicsQueue());
 }

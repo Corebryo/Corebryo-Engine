@@ -25,6 +25,8 @@
 
 #pragma once
 
+#include "Scene/Entity.h"
+
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <cstdint>
@@ -52,6 +54,10 @@ public:
     void Shutdown();
 
     void BeginFrame(float deltaTime);
+
+    void SetSceneEntities(const std::vector<Entity>& entities);
+    void SetSelectedEntity(Entity entity);
+    Entity GetSelectedEntity() const;
 
     void SetRenderStats(
         std::uint32_t drawCalls,
@@ -88,4 +94,6 @@ private:
     std::uint32_t LastDrawCalls;
     std::uint64_t LastTriangleCount;
     std::uint64_t LastVertexCount;
+    std::vector<Entity> SceneEntities;
+    Entity SelectedEntity;
 };

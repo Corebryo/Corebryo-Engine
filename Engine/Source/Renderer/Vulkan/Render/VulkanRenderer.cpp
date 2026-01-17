@@ -634,6 +634,21 @@ void VulkanRenderer::SetRenderItems(const std::vector<RenderItem>& Items)
     RenderItems = Items;
 }
 
+void VulkanRenderer::SetEditorEntities(const std::vector<Entity>& Entities)
+{
+    EditorEntities = Entities;
+}
+
+void VulkanRenderer::SetEditorSelection(Entity EntityHandle)
+{
+    EditorSelectedEntity = EntityHandle;
+}
+
+Entity VulkanRenderer::GetEditorSelection() const
+{
+    return EditorSelectedEntity;
+}
+
 void VulkanRenderer::RecordSkyboxStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent)
 {
     /* Render skybox before scene geometry. */
@@ -1202,7 +1217,10 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
 
     if (Overlay.IsInitialized())
     {
+        Overlay.SetSceneEntities(EditorEntities);
+        Overlay.SetSelectedEntity(EditorSelectedEntity);
         Overlay.BeginFrame(OverlayDeltaTime);
+        EditorSelectedEntity = Overlay.GetSelectedEntity();
         presentSemaphore = Overlay.Render(GraphicsQueue, imageIndex, RenderFinished);
     }
 

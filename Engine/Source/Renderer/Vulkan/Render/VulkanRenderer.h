@@ -29,6 +29,7 @@
 #include "Mesh.h"
 #include "../../RenderItem.h"
 #include "../Skybox/SkyboxRenderer.h"
+#include "Scene/Entity.h"
 
 #include <vulkan/vulkan.h>
 
@@ -68,6 +69,15 @@ public:
 
     /* Set render submission list. */
     void SetRenderItems(const std::vector<RenderItem>& Items);
+
+    /* Update editor scene entity list. */
+    void SetEditorEntities(const std::vector<Entity>& Entities);
+
+    /* Update selected editor entity. */
+    void SetEditorSelection(Entity EntityHandle);
+
+    /* Query selected editor entity. */
+    Entity GetEditorSelection() const;
 
     /* Render a single frame. */
     void DrawFrame(VkDevice Device, VkQueue GraphicsQueue);
@@ -281,4 +291,8 @@ private:
     /* Debug overlay. */
     NuklearOverlay Overlay;
     float OverlayDeltaTime = 0.0f;
+
+    /* Editor selection data. */
+    std::vector<Entity> EditorEntities;
+    Entity EditorSelectedEntity;
 };

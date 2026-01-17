@@ -214,6 +214,21 @@ void Scene::BuildRenderList(std::vector<RenderItem>& outItems) const
     }
 }
 
+/* Enumerate living entities in the scene. */
+void Scene::GetEntities(std::vector<Entity>& outEntities) const
+{
+    outEntities.clear();
+    outEntities.reserve(alive.size());
+
+    for (std::uint32_t id = 0; id < alive.size(); ++id)
+    {
+        if (alive[id])
+        {
+            outEntities.emplace_back(id);
+        }
+    }
+}
+
 /* Ensure internal arrays can hold entity id. */
 void Scene::EnsureSize(std::uint32_t id)
 {

@@ -50,6 +50,8 @@
 
 #include "NuklearOverlay.h"
 
+#include <cstdio>
+
 NuklearOverlay::NuklearOverlay()
     : Context(nullptr)
     , WindowHandle(nullptr)
@@ -61,6 +63,7 @@ NuklearOverlay::NuklearOverlay()
     , LastDrawCalls(0)
     , LastTriangleCount(0)
     , LastVertexCount(0)
+    , SelectedEntity()
 {
 }
 
@@ -149,6 +152,56 @@ void NuklearOverlay::BeginFrame(float deltaTime)
     }
 
     nk_end(Context);
+
+    const struct nk_rect entityBounds = nk_rect(12.0f, 130.0f, 220.0f, 260.0f);
+    const nk_flags entityFlags = NK_WINDOW_BORDER | NK_WINDOW_TITLE;
+
+    if (nk_begin(Context, "Entities", entityBounds, entityFlags))
+    {
+        nk_layout_row_dynamic(Context, 18.0f, 1);
+        if (SceneEntities.empty())
+        {
+            nk_label(Context, "No entities", NK_TEXT_LEFT);
+        }
+        else
+        {
+            for (const Entity& entity : SceneEntities)
+            {
+                char label[32]{};
+                std::snprintf(label, sizeof(label), "Entity %u", entity.GetId());
+
+                bool isSelected = entity.GetId() == SelectedEntity.GetId();
+                if (nk_selectable_label(Context, label, NK_TEXT_LEFT, &isSelected))
+                {
+                    if (isSelected)
+                    {
+                        SelectedEntity = entity;
+                    }
+                    else
+                    {
+                        SelectedEntity = Entity();
+                    }
+                }
+            }
+        }
+    }
+
+    nk_end(Context);
+}
+
+void NuklearOverlay::SetSceneEntities(const std::vector<Entity>& entities)
+{
+    SceneEntities = entities;
+}
+
+void NuklearOverlay::SetSelectedEntity(Entity entity)
+{
+    SelectedEntity = entity;
+}
+
+Entity NuklearOverlay::GetSelectedEntity() const
+{
+    return SelectedEntity;
 }
 
 void NuklearOverlay::SetRenderStats(
