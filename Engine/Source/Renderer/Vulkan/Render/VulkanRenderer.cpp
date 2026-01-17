@@ -30,6 +30,7 @@
 #include "Scene/EngineCamera.h"
 #include "Renderer/Vulkan/Render/WicTextureLoader.h"
 
+#include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 
 #include <cstdio>
@@ -422,6 +423,9 @@ bool VulkanRenderer::Create(
     RenderPass = RenderPassHandle;
     this->SwapchainFormat = SwapchainFormat;
     SwapchainExtent = Extent;
+    this->GraphicsQueueFamily = GraphicsQueueFamily;
+    GraphicsQueueHandle = GraphicsQueue;
+    this->SwapchainImageViews = SwapchainImageViews;
 
     if (!Camera)
     {
@@ -599,6 +603,30 @@ void VulkanRenderer::SetCameraPosition(const Vec3& Position)
     }
 
     Camera->SetPosition(Position);
+}
+
+void VulkanRenderer::SetOverlayTiming(float DeltaTime)
+{
+    OverlayDeltaTime = DeltaTime;
+}
+
+void VulkanRenderer::InitializeOverlay(GLFWwindow* WindowHandle)
+{
+    if (!WindowHandle || Overlay.IsInitialized() || DeviceHandle == VK_NULL_HANDLE ||
+        PhysicalDeviceHandle == VK_NULL_HANDLE)
+    {
+        return;
+    }
+
+    Overlay.Initialize(
+        WindowHandle,
+        DeviceHandle,
+        PhysicalDeviceHandle,
+        GraphicsQueueFamily,
+        GraphicsQueueHandle,
+        SwapchainFormat,
+        SwapchainImageViews,
+        SwapchainExtent);
 }
 
 void VulkanRenderer::SetRenderItems(const std::vector<RenderItem>& Items)       
@@ -1112,10 +1140,18 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
         return;
     }
 
+    VkSemaphore presentSemaphore = RenderFinished;
+
+    if (Overlay.IsInitialized())
+    {
+        Overlay.BeginFrame(OverlayDeltaTime);
+        presentSemaphore = Overlay.Render(GraphicsQueue, imageIndex, RenderFinished);
+    }
+
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &RenderFinished;
+    presentInfo.pWaitSemaphores = &presentSemaphore;
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = &Swapchain;
     presentInfo.pImageIndices = &imageIndex;
@@ -1126,6 +1162,8 @@ void VulkanRenderer::DrawFrame(VkDevice Device, VkQueue GraphicsQueue)
 void VulkanRenderer::Destroy(VkDevice Device)
 {
     /* Release GPU resources in a safe teardown order. */
+
+    Overlay.Shutdown();
 
     VkDevice activeDevice = Device != VK_NULL_HANDLE ? Device : DeviceHandle;
 
@@ -1244,6 +1282,9 @@ void VulkanRenderer::Destroy(VkDevice Device)
 
     DeviceHandle = VK_NULL_HANDLE;
     PhysicalDeviceHandle = VK_NULL_HANDLE;
+    SwapchainImageViews.clear();
+    GraphicsQueueHandle = VK_NULL_HANDLE;
+    GraphicsQueueFamily = 0;
 }
 
 bool VulkanRenderer::Recreate(
@@ -1261,6 +1302,9 @@ bool VulkanRenderer::Recreate(
     RenderPass = RenderPassHandle;
     this->SwapchainFormat = SwapchainFormat;
     SwapchainExtent = Extent;
+    this->GraphicsQueueFamily = GraphicsQueueFamily;
+    GraphicsQueueHandle = GraphicsQueue;
+    this->SwapchainImageViews = SwapchainImageViews;
 
     for (VkFramebuffer framebuffer : Framebuffers)
     {
@@ -1314,7 +1358,18 @@ bool VulkanRenderer::Recreate(
         return false;
     }
 
-    (void)GraphicsQueue;
+    if (Overlay.IsInitialized())
+    {
+        Overlay.Resize(
+            Device,
+            PhysicalDeviceHandle,
+            GraphicsQueueFamily,
+            GraphicsQueue,
+            SwapchainFormat,
+            SwapchainImageViews,
+            Extent);
+    }
+
     return true;
 }
 

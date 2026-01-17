@@ -128,6 +128,8 @@ void EngineRuntime::Tick(float deltaTime)
         return;
     }
 
+    Renderer.SetOverlayTiming(deltaTime);
+
     const float clampedDeltaTime = ClampFloat(deltaTime, kMinDeltaTime, kMaxDeltaTime);
 
     /* Cache the previous camera position for collision response. */
@@ -300,6 +302,7 @@ bool EngineRuntime::CreateVulkanResources()
     }
 
     RendererCreated = true;
+    Renderer.InitializeOverlay(WindowHandle);
     return true;
 }
 

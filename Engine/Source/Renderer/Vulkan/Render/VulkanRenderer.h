@@ -38,6 +38,9 @@
 
 class VulkanPipeline;
 class Camera;
+#include "NuklearOverlay.h"
+
+struct GLFWwindow;
 /* Vulkan renderer handling swapchain rendering. */
 class VulkanRenderer
 {
@@ -90,6 +93,12 @@ public:
     /* Camera position helpers. */
     Vec3 GetCameraPosition() const;
     void SetCameraPosition(const Vec3& Position);
+
+    /* Overlay timing input. */
+    void SetOverlayTiming(float DeltaTime);
+
+    /* Initialize editor overlay rendering. */
+    void InitializeOverlay(GLFWwindow* WindowHandle);
 
     /* Per-frame uniform buffer object. */
     struct UniformBufferObject
@@ -195,6 +204,9 @@ private:
     VkExtent2D SwapchainExtent{};
     VkDevice DeviceHandle = VK_NULL_HANDLE;
     VkPhysicalDevice PhysicalDeviceHandle = VK_NULL_HANDLE;
+    std::uint32_t GraphicsQueueFamily = 0;
+    VkQueue GraphicsQueueHandle = VK_NULL_HANDLE;
+    std::vector<VkImageView> SwapchainImageViews;
 
     /* Command buffers. */
     VkCommandPool CommandPool = VK_NULL_HANDLE;
@@ -265,4 +277,8 @@ private:
 
     /* Cached light matrix. */
     Mat4 LightViewProj = Mat4::Identity();
+
+    /* Debug overlay. */
+    NuklearOverlay Overlay;
+    float OverlayDeltaTime = 0.0f;
 };

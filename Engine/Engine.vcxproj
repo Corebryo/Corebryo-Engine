@@ -26,6 +26,7 @@
     <ClCompile Include="Source\Renderer\Vulkan\Core\VulkanDevice.cpp" />
     <ClCompile Include="Source\Renderer\Vulkan\Core\VulkanInstance.cpp" />
     <ClCompile Include="Source\Renderer\Vulkan\Render\ObjLoader.cpp" />
+    <ClCompile Include="Source\Renderer\Vulkan\Render\NuklearOverlay.cpp" />
     <ClCompile Include="Source\Renderer\Vulkan\Render\VulkanFramebuffers.cpp" />
     <ClCompile Include="Source\Renderer\Vulkan\Render\WicTextureLoader.cpp" />
     <ClCompile Include="Source\Renderer\Vulkan\Swapchain\VulkanSurface.cpp" />
@@ -52,6 +53,8 @@
     <ClInclude Include="Source\Renderer\Vulkan\Core\VulkanInstance.h" />
     <ClInclude Include="Source\Renderer\Vulkan\Render\Mesh.h" />
     <ClInclude Include="Source\Renderer\Vulkan\Render\ObjLoader.h" />
+    <ClInclude Include="Source\Renderer\Vulkan\Render\NuklearOverlay.h" />
+    <ClInclude Include="Source\Renderer\Vulkan\Render\Nuklear\NuklearGlfwVulkan.h" />
     <ClInclude Include="Source\Renderer\Vulkan\Render\VulkanFramebuffers.h" />
     <ClInclude Include="Source\Renderer\Vulkan\Render\WicTextureLoader.h" />
     <ClInclude Include="Source\Renderer\Vulkan\Swapchain\VulkanSurface.h" />
@@ -147,7 +150,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)Nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -162,7 +165,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)Nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -175,7 +178,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDir)Source;C:\Users\denha\Downloads\GlfwLibrary\include;$(ProjectDir)Source\ThirdParty\glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDir)Source;C:\Users\denha\Downloads\GlfwLibrary\include;$(ProjectDir)Source\ThirdParty\glm;$(SolutionDir)Nuklear</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard_C>stdclatest</LanguageStandard_C>
       <Optimization>Disabled</Optimization>
@@ -205,7 +208,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDir)Source;C:\Users\denha\Downloads\GlfwLibrary\include;$(ProjectDir)Source\ThirdParty\glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDir)Source;C:\Users\denha\Downloads\GlfwLibrary\include;$(ProjectDir)Source\ThirdParty\glm;$(SolutionDir)Nuklear</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard_C>stdclatest</LanguageStandard_C>
       <Optimization>Disabled</Optimization>
