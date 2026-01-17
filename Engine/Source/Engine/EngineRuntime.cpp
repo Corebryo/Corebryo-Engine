@@ -206,10 +206,21 @@ void EngineRuntime::Tick(float deltaTime)
             inspector.Scale[0] = transform->Scale.x;
             inspector.Scale[1] = transform->Scale.y;
             inspector.Scale[2] = transform->Scale.z;
+
+            const AABB bounds = transform->GetUnitCubeAABB();
+            inspector.BoundsMin[0] = bounds.Min.x;
+            inspector.BoundsMin[1] = bounds.Min.y;
+            inspector.BoundsMin[2] = bounds.Min.z;
+            inspector.BoundsMax[0] = bounds.Max.x;
+            inspector.BoundsMax[1] = bounds.Max.y;
+            inspector.BoundsMax[2] = bounds.Max.z;
         }
 
         inspector.HasMesh = WorldScene.GetMesh(SelectedEntity) != nullptr;
         inspector.HasMaterial = WorldScene.GetMaterial(SelectedEntity) != nullptr;
+        inspector.ComponentCount = static_cast<std::uint32_t>(inspector.HasTransform) +
+            static_cast<std::uint32_t>(inspector.HasMesh) +
+            static_cast<std::uint32_t>(inspector.HasMaterial);
     }
 
     InspectorState = inspector;

@@ -44,6 +44,9 @@ struct InspectorData
     float Scale[3] = { 1.0f, 1.0f, 1.0f };
     bool HasMesh = false;
     bool HasMaterial = false;
+    std::uint32_t ComponentCount = 0;
+    float BoundsMin[3] = { 0.0f, 0.0f, 0.0f };
+    float BoundsMax[3] = { 0.0f, 0.0f, 0.0f };
 };
 
 struct TransformEdit

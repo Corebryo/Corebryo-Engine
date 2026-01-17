@@ -158,6 +158,7 @@ void NuklearOverlay::BeginFrame(float deltaTime)
     const float leftPanelWidth = 220.0f;
     const float inspectorWidth = 260.0f;
     const float inspectorHeight = 320.0f;
+    const float selectionInfoHeight = 120.0f;
     const float rightX = std::max(margin, windowWidth - inspectorWidth - margin);
 
     const struct nk_rect bounds = nk_rect(margin, margin, leftPanelWidth, 110.0f);
@@ -281,6 +282,43 @@ void NuklearOverlay::BeginFrame(float deltaTime)
             nk_label(Context, "Components", NK_TEXT_LEFT);
             nk_labelf(Context, NK_TEXT_LEFT, "MeshComponent: %s", Inspector.HasMesh ? "Yes" : "No");
             nk_labelf(Context, NK_TEXT_LEFT, "MaterialComponent: %s", Inspector.HasMaterial ? "Yes" : "No");
+        }
+    }
+
+    nk_end(Context);
+
+    const struct nk_rect selectionBounds = nk_rect(
+        rightX,
+        margin + inspectorHeight + margin,
+        inspectorWidth,
+        selectionInfoHeight);
+    const nk_flags selectionFlags = NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_NO_SCROLLBAR;
+
+    if (nk_begin(Context, "Selection Info", selectionBounds, selectionFlags))
+    {
+        nk_layout_row_dynamic(Context, 18.0f, 1);
+        if (!Inspector.HasSelection)
+        {
+            nk_label(Context, "No entity selected", NK_TEXT_LEFT);
+        }
+        else
+        {
+            nk_labelf(Context, NK_TEXT_LEFT, "Entity: %u", Inspector.SelectedEntity.GetId());
+            nk_labelf(Context, NK_TEXT_LEFT, "Components: %u", Inspector.ComponentCount);
+            nk_labelf(
+                Context,
+                NK_TEXT_LEFT,
+                "Bounds Min: %.2f, %.2f, %.2f",
+                Inspector.BoundsMin[0],
+                Inspector.BoundsMin[1],
+                Inspector.BoundsMin[2]);
+            nk_labelf(
+                Context,
+                NK_TEXT_LEFT,
+                "Bounds Max: %.2f, %.2f, %.2f",
+                Inspector.BoundsMax[0],
+                Inspector.BoundsMax[1],
+                Inspector.BoundsMax[2]);
         }
     }
 
