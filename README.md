@@ -14,6 +14,21 @@ Expect breaking changes.
 - Make Vulkan usage clean and predictable.
 - Maintain a tidy repository with a clear folder layout.
 
+## Why Corebryo
+
+Corebryo exists for developers who want to understand how a modern renderer and engine systems are built, without fighting a large proprietary toolchain. It prioritizes clarity, control, and small, inspectable systems over one-click features.
+
+### When it is a good fit
+- Indie developers who want to learn engine architecture by reading and changing the code
+- Graphics programmers experimenting with Vulkan and render pipelines
+- Small teams that want a lightweight base they can own and extend
+- Students or hobbyists who care more about understanding than shipping fast
+
+### Why not just Unity or Unreal
+- Those engines optimize for broad usability and rapid content creation, not transparency
+- Corebryo keeps the stack small so you can reason about every system and modify it safely
+- It is intentionally minimal, so you can build exactly the tools and workflows you need
+
 ## Current Features
 
 - Entity + component scene storage (Transform, Mesh, Material)
