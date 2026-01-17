@@ -127,119 +127,12 @@ void EngineRuntime::Tick(float deltaTime)
         return;
     }
 
-    Renderer.SetOverlayTiming(deltaTime);
-
-    const float clampedDeltaTime = ClampFloat(deltaTime, kMinDeltaTime, kMaxDeltaTime);
-
-    /* Cache the previous camera position for collision response. */
-    const Vec3 previousCameraPosition = Renderer.GetCameraPosition();
-
-    /* Update the camera controller with the real delta time. */
-    Renderer.UpdateCamera(clampedDeltaTime);
-
-    /* Prevent entering the cube while in the game state. */
-    if (kEnableCube && g_CurrentEngineState == EngineState::Game)
+    TickSimulation(deltaTime);
+    TickEditorSyncPreRender();
+    const bool didRender = TickRender(deltaTime);
+    if (didRender)
     {
-        AABB cubeBounds{};
-        cubeBounds.Min = Vec3(-0.5f, -0.5f, -0.5f) + CubePosition;
-        cubeBounds.Max = Vec3(0.5f, 0.5f, 0.5f) + CubePosition;
-
-        const Vec3 padding(
-            kCameraCollisionRadius,
-            kCameraCollisionRadius,
-            kCameraCollisionRadius);
-        AABB paddedBounds{};
-        paddedBounds.Min = cubeBounds.Min - padding;
-        paddedBounds.Max = cubeBounds.Max + padding;
-
-        if (IsPointInsideAABB(Renderer.GetCameraPosition(), paddedBounds))
-        {
-            Renderer.SetCameraPosition(previousCameraPosition);
-        }
-    }
-
-    /* Skip rendering when the swapchain is effectively minimized. */
-    if (Swapchain.GetExtent().width == 0 || Swapchain.GetExtent().height == 0)
-    {
-        return;
-    }
-
-    /* Build and submit render items for this frame. */
-    WorldScene.BuildRenderList(RenderItems);
-    Renderer.SetRenderItems(RenderItems);
-    WorldScene.GetEntities(SceneEntities);
-
-    if (SelectedEntity.IsValid())
-    {
-        bool selectionValid = false;
-        for (const Entity& entity : SceneEntities)
-        {
-            if (entity.GetId() == SelectedEntity.GetId())
-            {
-                selectionValid = true;
-                break;
-            }
-        }
-
-        if (!selectionValid)
-        {
-            SelectedEntity = Entity();
-        }
-    }
-
-    InspectorData inspector{};
-    inspector.HasSelection = SelectedEntity.IsValid();
-    inspector.SelectedEntity = SelectedEntity;
-    if (inspector.HasSelection)
-    {
-        const TransformComponent* transform = WorldScene.GetTransform(SelectedEntity);
-        inspector.HasTransform = transform != nullptr;
-        if (transform)
-        {
-            inspector.Position[0] = transform->Position.x;
-            inspector.Position[1] = transform->Position.y;
-            inspector.Position[2] = transform->Position.z;
-            inspector.Rotation[0] = transform->Rotation.x;
-            inspector.Rotation[1] = transform->Rotation.y;
-            inspector.Rotation[2] = transform->Rotation.z;
-            inspector.Scale[0] = transform->Scale.x;
-            inspector.Scale[1] = transform->Scale.y;
-            inspector.Scale[2] = transform->Scale.z;
-
-            const AABB bounds = transform->GetUnitCubeAABB();
-            inspector.BoundsMin[0] = bounds.Min.x;
-            inspector.BoundsMin[1] = bounds.Min.y;
-            inspector.BoundsMin[2] = bounds.Min.z;
-            inspector.BoundsMax[0] = bounds.Max.x;
-            inspector.BoundsMax[1] = bounds.Max.y;
-            inspector.BoundsMax[2] = bounds.Max.z;
-        }
-
-        inspector.HasMesh = WorldScene.GetMesh(SelectedEntity) != nullptr;
-        inspector.HasMaterial = WorldScene.GetMaterial(SelectedEntity) != nullptr;
-        inspector.ComponentCount = static_cast<std::uint32_t>(inspector.HasTransform) +
-            static_cast<std::uint32_t>(inspector.HasMesh) +
-            static_cast<std::uint32_t>(inspector.HasMaterial);
-    }
-
-    InspectorState = inspector;
-    Renderer.SetEditorEntities(SceneEntities);
-    Renderer.SetEditorSelection(SelectedEntity);
-    Renderer.SetInspectorData(InspectorState);
-    Renderer.DrawFrame(Device.GetDevice(), Device.GetGraphicsQueue());
-    SelectedEntity = Renderer.GetEditorSelection();
-
-    TransformEdit edit{};
-    if (Renderer.ConsumeTransformEdit(edit))
-    {
-        TransformComponent* transform = WorldScene.GetTransform(edit.Target);
-        if (transform)
-        {
-            transform->Position = Vec3(edit.Position[0], edit.Position[1], edit.Position[2]);
-            transform->Rotation = Vec3(edit.Rotation[0], edit.Rotation[1], edit.Rotation[2]);
-            transform->Scale = Vec3(edit.Scale[0], edit.Scale[1], edit.Scale[2]);
-            WorldScene.MarkTransformDirty(edit.Target);
-        }
+        TickEditorSyncPostRender();
     }
 }
 
@@ -301,6 +194,137 @@ void EngineRuntime::OnResize(std::int32_t width, std::int32_t height)
 bool EngineRuntime::IsInitialized() const
 {
     return Initialized;
+}
+
+void EngineRuntime::TickSimulation(float deltaTime)
+{
+    const float clampedDeltaTime = ClampFloat(deltaTime, kMinDeltaTime, kMaxDeltaTime);
+
+    /* Cache the previous camera position for collision response. */
+    const Vec3 previousCameraPosition = Renderer.GetCameraPosition();
+
+    /* Update the camera controller with the real delta time. */
+    Renderer.UpdateCamera(clampedDeltaTime);
+
+    /* Prevent entering the cube while in the game state. */
+    if (kEnableCube && g_CurrentEngineState == EngineState::Game)
+    {
+        AABB cubeBounds{};
+        cubeBounds.Min = Vec3(-0.5f, -0.5f, -0.5f) + CubePosition;
+        cubeBounds.Max = Vec3(0.5f, 0.5f, 0.5f) + CubePosition;
+
+        const Vec3 padding(
+            kCameraCollisionRadius,
+            kCameraCollisionRadius,
+            kCameraCollisionRadius);
+        AABB paddedBounds{};
+        paddedBounds.Min = cubeBounds.Min - padding;
+        paddedBounds.Max = cubeBounds.Max + padding;
+
+        if (IsPointInsideAABB(Renderer.GetCameraPosition(), paddedBounds))
+        {
+            Renderer.SetCameraPosition(previousCameraPosition);
+        }
+    }
+
+    /* Build render items for this frame. */
+    WorldScene.BuildRenderList(RenderItems);
+}
+
+void EngineRuntime::TickEditorSyncPreRender()
+{
+    WorldScene.GetEntities(SceneEntities);
+
+    if (SelectedEntity.IsValid())
+    {
+        bool selectionValid = false;
+        for (const Entity& entity : SceneEntities)
+        {
+            if (entity.GetId() == SelectedEntity.GetId())
+            {
+                selectionValid = true;
+                break;
+            }
+        }
+
+        if (!selectionValid)
+        {
+            SelectedEntity = Entity();
+        }
+    }
+
+    InspectorData inspector{};
+    inspector.HasSelection = SelectedEntity.IsValid();
+    inspector.SelectedEntity = SelectedEntity;
+    if (inspector.HasSelection)
+    {
+        const TransformComponent* transform = WorldScene.GetTransform(SelectedEntity);
+        inspector.HasTransform = transform != nullptr;
+        if (transform)
+        {
+            inspector.Position[0] = transform->Position.x;
+            inspector.Position[1] = transform->Position.y;
+            inspector.Position[2] = transform->Position.z;
+            inspector.Rotation[0] = transform->Rotation.x;
+            inspector.Rotation[1] = transform->Rotation.y;
+            inspector.Rotation[2] = transform->Rotation.z;
+            inspector.Scale[0] = transform->Scale.x;
+            inspector.Scale[1] = transform->Scale.y;
+            inspector.Scale[2] = transform->Scale.z;
+
+            const AABB bounds = transform->GetUnitCubeAABB();
+            inspector.BoundsMin[0] = bounds.Min.x;
+            inspector.BoundsMin[1] = bounds.Min.y;
+            inspector.BoundsMin[2] = bounds.Min.z;
+            inspector.BoundsMax[0] = bounds.Max.x;
+            inspector.BoundsMax[1] = bounds.Max.y;
+            inspector.BoundsMax[2] = bounds.Max.z;
+        }
+
+        inspector.HasMesh = WorldScene.GetMesh(SelectedEntity) != nullptr;
+        inspector.HasMaterial = WorldScene.GetMaterial(SelectedEntity) != nullptr;
+        inspector.ComponentCount = static_cast<std::uint32_t>(inspector.HasTransform) +
+            static_cast<std::uint32_t>(inspector.HasMesh) +
+            static_cast<std::uint32_t>(inspector.HasMaterial);
+    }
+
+    InspectorState = inspector;
+    Renderer.SetEditorEntities(SceneEntities);
+    Renderer.SetEditorSelection(SelectedEntity);
+    Renderer.SetInspectorData(InspectorState);
+}
+
+void EngineRuntime::TickEditorSyncPostRender()
+{
+    SelectedEntity = Renderer.GetEditorSelection();
+
+    TransformEdit edit{};
+    if (Renderer.ConsumeTransformEdit(edit))
+    {
+        TransformComponent* transform = WorldScene.GetTransform(edit.Target);
+        if (transform)
+        {
+            transform->Position = Vec3(edit.Position[0], edit.Position[1], edit.Position[2]);
+            transform->Rotation = Vec3(edit.Rotation[0], edit.Rotation[1], edit.Rotation[2]);
+            transform->Scale = Vec3(edit.Scale[0], edit.Scale[1], edit.Scale[2]);
+            WorldScene.MarkTransformDirty(edit.Target);
+        }
+    }
+}
+
+bool EngineRuntime::TickRender(float deltaTime)
+{
+    Renderer.SetOverlayTiming(deltaTime);
+
+    /* Skip rendering when the swapchain is effectively minimized. */
+    if (Swapchain.GetExtent().width == 0 || Swapchain.GetExtent().height == 0)
+    {
+        return false;
+    }
+
+    Renderer.SetRenderItems(RenderItems);
+    Renderer.DrawFrame(Device.GetDevice(), Device.GetGraphicsQueue());
+    return true;
 }
 
 /* Create Vulkan and render resources. */

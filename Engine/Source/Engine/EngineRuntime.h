@@ -73,6 +73,18 @@ private:
     /* Destroy Vulkan and render resources. */
     void DestroyVulkanResources();
 
+    /* Update simulation and scene data for the frame. */
+    void TickSimulation(float deltaTime);
+
+    /* Push editor state into the runtime renderer. */
+    void TickEditorSyncPreRender();
+
+    /* Pull editor edits back into the runtime after rendering. */
+    void TickEditorSyncPostRender();
+
+    /* Render the current frame. */
+    bool TickRender(float deltaTime);
+
     /* Build the initial scene. */
     void CreateScene();
 
