@@ -21,6 +21,7 @@ Expect breaking changes.
 - Basic engine project structure (Assets, Shaders, Source, etc.)
 - Win32 windowing layer (plus GLFW integration)
 - Vulkan renderer foundation
+- Main render stages (skybox, opaque, transparent) executed within a single render pass
 
 ## Planned Features
 

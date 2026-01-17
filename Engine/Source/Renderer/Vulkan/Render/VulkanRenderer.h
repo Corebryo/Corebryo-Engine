@@ -158,6 +158,11 @@ private:
     /* Uniform updates. */
     void UpdateUniformBuffer(VkDevice Device);
 
+    /* Main render pass stage recording. */
+    void RecordSkyboxStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent);
+    void RecordOpaqueStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent);
+    void RecordTransparentStage(VkCommandBuffer CommandBuffer, VkExtent2D Extent);
+
 private:
     /* Swapchain state. */
     VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
